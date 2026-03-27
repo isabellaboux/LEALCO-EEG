@@ -1,0 +1,56 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: VOTinv ~ 1 + block + c_FASQUEL_image_agreement + SUBTLEX_frequency_log_cat +  
+    c_FASQUEL_concreteness + c_FASQUEL_image_agreement:c_FASQUEL_concreteness +  
+    SUBTLEX_frequency_log_cat:c_FASQUEL_concreteness + c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat +  
+    c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat:c_FASQUEL_concreteness +  
+    block:c_FASQUEL_concreteness + block:SUBTLEX_frequency_log_cat +      block:SUBTLEX_frequency_log_cat:c_FASQUEL_concreteness +  
+    block:c_FASQUEL_image_agreement + block:c_FASQUEL_image_agreement:c_FASQUEL_concreteness +  
+    block:c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat +  
+    block:c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat:c_FASQUEL_concreteness +  
+    (1 + block + c_FASQUEL_concreteness + c_FASQUEL_image_agreement |          subjID) + (1 + block | target_label)
+   Data: votINV
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,  
+    calc.derivs = TRUE, use.last.params = FALSE, checkControl = list(         check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",  
+        check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",          check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",  
+        check.scaleX = "warning", check.formula.LHS = "stop"),      checkConv = list(check.conv.grad = list(action = "warning",  
+        tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: -21565.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.8905 -0.6188  0.0704  0.6837  2.9708 
+
+Random effects:
+ Groups       Name                      Variance  Std.Dev.  Corr             
+ subjID       (Intercept)               1.331e-08 1.154e-04                  
+              block1                    6.251e-10 2.500e-05  0.40            
+              c_FASQUEL_concreteness    8.482e-09 9.210e-05  0.03  0.21      
+              c_FASQUEL_image_agreement 6.009e-09 7.752e-05 -0.41  0.19 -0.72
+ target_label (Intercept)               9.359e-09 9.674e-05                  
+              block1                    5.211e-10 2.283e-05 -0.16            
+ Residual                               3.588e-08 1.894e-04                  
+Number of obs: 1545, groups:  subjID, 51; target_label, 28
+
+Fixed effects:
+                                                                                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                                                                         7.600e-04  3.063e-05  24.815   <2e-16 ***
+block1                                                                             -8.307e-05  9.509e-06  -8.736   <2e-16 ***
+c_FASQUEL_image_agreement                                                           1.076e-04  9.077e-05   1.186   0.2357    
+SUBTLEX_frequency_log_cat1                                                          5.646e-05  2.602e-05   2.170   0.0300 *  
+c_FASQUEL_concreteness                                                              1.264e-04  8.547e-05   1.479   0.1391    
+c_FASQUEL_image_agreement:c_FASQUEL_concreteness                                    1.861e-04  1.513e-04   1.230   0.2187    
+SUBTLEX_frequency_log_cat1:c_FASQUEL_concreteness                                   1.112e-04  8.444e-05   1.317   0.1879    
+c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat1                               -1.283e-04  9.016e-05  -1.423   0.1547    
+block1:c_FASQUEL_concreteness                                                       4.308e-05  2.954e-05   1.459   0.1447    
+block1:SUBTLEX_frequency_log_cat1                                                  -5.844e-06  8.838e-06  -0.661   0.5084    
+block1:c_FASQUEL_image_agreement                                                    5.815e-06  3.324e-05   0.175   0.8611    
+c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat1:c_FASQUEL_concreteness        -2.875e-04  1.513e-04  -1.900   0.0575 .  
+block1:SUBTLEX_frequency_log_cat1:c_FASQUEL_concreteness                            4.570e-05  2.954e-05   1.547   0.1218    
+block1:c_FASQUEL_image_agreement:c_FASQUEL_concreteness                             7.133e-05  5.873e-05   1.215   0.2245    
+block1:c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat1                         2.384e-05  3.325e-05   0.717   0.4734    
+block1:c_FASQUEL_image_agreement:SUBTLEX_frequency_log_cat1:c_FASQUEL_concreteness  8.308e-05  5.872e-05   1.415   0.1571    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

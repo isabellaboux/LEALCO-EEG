@@ -1,0 +1,43 @@
+File_ID,File_name,VOT,correct,AR,error
+1,LEALCO-EEG_Audio_103_test_block1_partnerA_001.wav,958,1
+2,LEALCO-EEG_Audio_103_test_block1_partnerA_002.wav,1149,1
+3,LEALCO-EEG_Audio_103_test_block1_partnerA_003.wav,1741,1
+4,LEALCO-EEG_Audio_103_test_block1_partnerA_004.wav,1292,0,Kanufahrer,2
+5,LEALCO-EEG_Audio_103_test_block1_partnerA_005.wav,1834,1
+6,LEALCO-EEG_Audio_103_test_block1_partnerA_006.wav,1660,0,Blatt Papier,2
+7,LEALCO-EEG_Audio_103_test_block1_partnerA_007.wav,1025,1
+8,LEALCO-EEG_Audio_103_test_block1_partnerA_008.wav,2133,0,Raute,4
+9,LEALCO-EEG_Audio_103_test_block1_partnerA_009.wav,2234,1
+10,LEALCO-EEG_Audio_103_test_block1_partnerA_010.wav,5247,0,Brunnen ,4
+11,LEALCO-EEG_Audio_103_test_block1_partnerA_011.wav,1101,1
+12,LEALCO-EEG_Audio_103_test_block1_partnerA_012.wav,2907,0,Ypsilon ,4
+13,LEALCO-EEG_Audio_103_test_block1_partnerA_013.wav,4359,0,Gipfel ,4
+14,LEALCO-EEG_Audio_103_test_block1_partnerA_014.wav,885,1
+15,LEALCO-EEG_Audio_103_test_block1_partnerA_015.wav,1483,1
+16,LEALCO-EEG_Audio_103_test_block1_partnerA_016.wav,3101,0,umfallende Person ,4
+17,LEALCO-EEG_Audio_103_test_block1_partnerA_017.wav,2753,1
+18,LEALCO-EEG_Audio_103_test_block1_partnerA_018.wav,3301,0,Stern ,4
+19,LEALCO-EEG_Audio_103_test_block1_partnerA_019.wav,1796,1
+20,LEALCO-EEG_Audio_103_test_block1_partnerA_020.wav,2239,0,Pferdereit,8
+21,LEALCO-EEG_Audio_103_test_block1_partnerA_021.wav,1637,1
+22,LEALCO-EEG_Audio_103_test_block1_partnerA_022.wav,1090,1
+23,LEALCO-EEG_Audio_103_test_block1_partnerA_023.wav,2851,1
+24,LEALCO-EEG_Audio_103_test_block1_partnerA_024.wav,1138,1
+25,LEALCO-EEG_Audio_103_test_block1_partnerA_025.wav,1700,1
+26,LEALCO-EEG_Audio_103_test_block1_partnerA_026.wav,2025,0,Grill,4
+27,LEALCO-EEG_Audio_103_test_block1_partnerA_027.wav,3064,0,Tee,4
+28,LEALCO-EEG_Audio_103_test_block1_partnerA_028.wav,2281,0,Fenster ,4
+29,LEALCO-EEG_Audio_103_test_block1_partnerA_029.wav,3777,0,Fledermaus,4
+30,LEALCO-EEG_Audio_103_test_block1_partnerA_030.wav,1364,0,Ypsilon ,4
+31,LEALCO-EEG_Audio_103_test_block1_partnerA_031.wav,3563,0,Tür ,4
+32,LEALCO-EEG_Audio_103_test_block1_partnerA_032.wav,2039,1
+33,LEALCO-EEG_Audio_103_test_block1_partnerA_033.wav,3908,0,Mensch ,4
+34,LEALCO-EEG_Audio_103_test_block1_partnerA_034.wav,1687,1
+35,LEALCO-EEG_Audio_103_test_block1_partnerA_035.wav,1895,0,tanzende Frau ,4
+36,LEALCO-EEG_Audio_103_test_block1_partnerA_036.wav,1115,1
+37,LEALCO-EEG_Audio_103_test_block1_partnerA_037.wav,885,1
+38,LEALCO-EEG_Audio_103_test_block1_partnerA_038.wav,1410,0,Fuchs,4
+39,LEALCO-EEG_Audio_103_test_block1_partnerA_039.wav,1742,0,Haus,4
+40,LEALCO-EEG_Audio_103_test_block1_partnerA_040.wav,3891,0,Axt,5
+41,LEALCO-EEG_Audio_103_test_block1_partnerA_041.wav,2116,1
+42,LEALCO-EEG_Audio_103_test_block1_partnerA_042.wav,1103,0,Treppe,4

@@ -1,0 +1,143 @@
+---
+title: "B_merge"
+---
+
+# LEALCO-EEG: merge all data *from test task*
+
+### Goal
+
+Generate one file containing all the relevant data from the test task of the LEALCO-BEH study.
+
+### Inputs
+
+-   the **PsychoPy input files** containing information about the presented stimuli and conditions
+
+-   the **demographics**;the table containing (by subject) information about age, language spoken and other demographics
+
+-   the **debriefing**: make sure that the column containing hte subjID does not contrin the apostrophe
+
+-   the **VOT files**: this file contains informatoon about naming latencies, accuracy, and type of errors committed. [Note]{.underline}: these files need to be freed of the BOM. As some files (for unexplained reasons) still have, it should first be removed "manually" by opening the files in Notepad++ \>Encoding \> UTF-8\>Save. These files are easy to spot because they are heavier than the ones encoded in UTF-8.
+
+### Output
+
+The output file is a large .csv table containing the entire data of the file in a long format. It puts together the PsychoPy input files, the demographics, the VOT files as well as the relevant information from the debriefing questionnaire.
+
+## Load packages
+
+```{r}
+#install.packages("chron")
+
+library(dplyr)
+library(tidyverse)
+library(readxl)
+library(chron)
+```
+
+## Define which files to read
+
+```{r}
+subjList <- c('101', '102', '103', '104', '105', '106', '107', '108', '109', '110',
+              '111', '112', '113', '114', '115', '116', '117', '118', '119', '120',
+              '121', '122', '123', '124', '125', '126', '127', '128', '129', '130',
+              '131', '132', '133', '134', '135', '136', '137', '138', '139', '140',
+              '141', '142', '143', '144', '145', '146', '147', '148', '149', '150',
+              '151', '152', '153', '154', '155', '156')
+
+partnerList <- c('A', 'B')
+blockList <- c('1', '2')
+```
+
+## Read files
+
+```{r}
+
+# ============== initialize empty df to be filled with all data from all subjects
+data <- data.frame()
+offsets <- data.frame()
+
+i_subjList <- subjList[1]
+i_blockList <- blockList[2]
+
+# ============== loop over files
+for (i_subjList in subjList) {
+  for (i_blockList in blockList) {
+      
+      print(i_subjList)
+      print(i_blockList)
+      
+      
+      # ================ define input files
+      
+      
+      # the last exposure to the training stimulus is in training block 3 for test # block 1 and in training block 5 for test block 2
+      if (i_blockList == '1'){
+         relevant_training <- '3'
+      } else if (i_blockList == '2'){
+        relevant_training <- '5'
+      }
+        
+        # determine input file names
+      trainingA_filename <- sprintf('data/psychopy/LEALCO-EEG_Behavioral_%s_training_block%s_partnerA.csv', i_subjList, relevant_training)
+            trainingB_filename <- sprintf('data/psychopy/LEALCO-EEG_Behavioral_%s_training_block%s_partnerB.csv', i_subjList, relevant_training)
+            testA_filename <- sprintf('data/psychopy/LEALCO-EEG_Behavioral_%s_test_block%s_partnerA.csv', i_subjList, i_blockList)
+                        testB_filename <- sprintf('data/psychopy/LEALCO-EEG_Behavioral_%s_test_block%s_partnerB.csv', i_subjList, i_blockList)
+      
+      # load files
+       trainingA = read.csv(trainingA_filename, sep = ",", fileEncoding = "Latin1", check.names = F)
+              trainingB = read.csv(trainingB_filename, sep = ",", fileEncoding = "Latin1", check.names = F)
+      testA = read.csv(testA_filename, sep = ",", fileEncoding = "Latin1", check.names = F)
+      testB = read.csv(testB_filename, sep = ",", fileEncoding = "Latin1", check.names = F)
+      
+      #  ================  clean up
+      
+       testA <- testA %>% select(target_stimID, trial.started, expStart)
+       testB <- testB %>% select(target_stimID, trial.started, expStart)
+       trainingA <- trainingA %>% select(target_stimID, trial.started, expStart)
+       trainingB <- trainingB %>% select(target_stimID, trial.started, expStart)
+      testA <- testA[-c(43), ]
+      testB <- testB[-c(43), ]
+      trainingA <- trainingA[-c(29), ]
+      trainingB <- trainingB[-c(29), ]
+      
+      # ================ compute exact timestamps for each trial
+              
+      # extract start time (h:m:s)
+      trainingA$expStart <- as.chron(trainingA$expStart, format = '%Y-%m-%d %Hh%M.%S.%OS')
+      trainingB$expStart <- as.chron(trainingB$expStart, format = '%Y-%m-%d %Hh%M.%S.%OS')
+      testA$expStart <- as.chron(testA$expStart, format = '%Y-%m-%d %Hh%M.%S.%OS')
+      testB$expStart <- as.chron(testB$expStart, format = '%Y-%m-%d %Hh%M.%S.%OS')
+      
+      # add the trial onset time to the experiment start time
+      days_to_add <- trainingA$trial.started / 86400
+      trainingA$training_timestamp <- trainingA$expStart + days_to_add
+      days_to_add <- trainingB$trial.started / 86400
+      trainingB$training_timestamp <- trainingB$expStart + days_to_add
+      days_to_add <- testA$trial.started / 86400
+      testA$test_timestamp <- testA$expStart + days_to_add
+      days_to_add <- testB$trial.started / 86400
+      testB$test_timestamp <- testB$expStart + days_to_add
+      
+      # ================== calculate time offset between training and test
+      
+      # select only relevant variables
+      test <- rbind(testA, testB)
+      training <- rbind(trainingA, trainingB)
+      
+      # align timestamps of training and test by target itm ID and calculate difference in time
+      full <- left_join(training, test, by = 'target_stimID')
+      full$offset <-  as.numeric(difftime(full$test_timestamp, full$training_timestamp, unit='mins'))
+      full$subjID <- i_subjList
+      full$block <- i_blockList
+      
+      # ============ append to dataframe
+      offsets <- rbind(offsets, full)
+      
+  } #  end of blockList
+} #  end of subjList
+```
+
+## Save
+
+```{r}
+write.csv(offsets, 'data/LEALCO-EEG_test_merged_data_offsets.csv', row.names=FALSE, fileEncoding = "UTF-8")
+```

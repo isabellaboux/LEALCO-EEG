@@ -1,0 +1,74 @@
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation)
+(p-values based on Wald z-scores) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: error_1 ~ 1 + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement +      c_FASQUEL_concreteness + c_FASQUEL_image_agreement:c_FASQUEL_concreteness +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement + c_SUBTLEX_frequency_log:c_FASQUEL_concreteness +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness +      partner_type + c_FASQUEL_image_agreement:partner_type + c_FASQUEL_concreteness:partner_type +  
+    c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type +      c_SUBTLEX_frequency_log:partner_type + c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:partner_type +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:partner_type +      c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type +  
+    block + c_FASQUEL_concreteness:block + c_SUBTLEX_frequency_log:block +      partner_type:block + c_SUBTLEX_frequency_log:partner_type:block +  
+    c_FASQUEL_concreteness:partner_type:block + c_FASQUEL_image_agreement:block +      c_FASQUEL_image_agreement:c_FASQUEL_concreteness:block +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:block +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:block + c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:block +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:partner_type:block +  
+    c_FASQUEL_image_agreement:partner_type:block + c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type:block +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:partner_type:block +      c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type:block +  
+    (1 | subjID)
+   Data: error_acc
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list( 
+        action = "message", tol = 1e-04), check.conv.hess = list(         action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+     AIC      BIC   logLik deviance df.resid 
+   578.6    797.7   -256.3    512.6     5625 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-0.5366 -0.0860 -0.0558 -0.0330 14.5428 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ subjID (Intercept) 0.6314   0.7946  
+Number of obs: 5658, groups:  subjID, 52
+
+Fixed effects:
+                                                                                               Estimate Std. Error   z value Pr(>|z|) Pr(>|t|)    
+(Intercept)                                                                                    -5.30016    0.31824 -16.65466    0.000  < 2e-16 ***
+c_SUBTLEX_frequency_log                                                                        -1.08168    0.37362  -2.89513    0.004  0.00379 ** 
+c_FASQUEL_image_agreement                                                                       3.05229    0.93460   3.26587    0.001  0.00109 ** 
+c_FASQUEL_concreteness                                                                         -0.58696    0.71692  -0.81872    0.413  0.41295    
+partner_type1                                                                                  -0.09113    0.25422  -0.35847    0.720  0.71999    
+block1                                                                                         -0.03350    0.25411  -0.13183    0.895  0.89512    
+c_FASQUEL_image_agreement:c_FASQUEL_concreteness                                               -6.73401    2.71910  -2.47656    0.013  0.01327 *  
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                              -3.97732    1.22948  -3.23495    0.001  0.00122 ** 
+c_SUBTLEX_frequency_log:c_FASQUEL_concreteness                                                  0.45487    0.92256   0.49305    0.622  0.62198    
+c_FASQUEL_image_agreement:partner_type1                                                         0.74381    0.94869   0.78404    0.433  0.43302    
+c_FASQUEL_concreteness:partner_type1                                                            0.72415    0.71479   1.01309    0.311  0.31102    
+c_SUBTLEX_frequency_log:partner_type1                                                           0.30059    0.37518   0.80120    0.423  0.42302    
+c_FASQUEL_concreteness:block1                                                                  -1.21450    0.71434  -1.70017    0.089  0.08910 .  
+c_SUBTLEX_frequency_log:block1                                                                 -0.20361    0.37366  -0.54491    0.586  0.58581    
+partner_type1:block1                                                                            0.21343    0.25364   0.84146    0.400  0.40009    
+c_FASQUEL_image_agreement:block1                                                                0.03321    0.93679   0.03545    0.972  0.97172    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness                       11.35022    3.66193   3.09952    0.002  0.00194 ** 
+c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type1                                 -4.93410    2.73652  -1.80306    0.071  0.07138 .  
+c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:partner_type1                                   -0.18194    0.92129  -0.19749    0.843  0.84345    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:partner_type1                                -1.63130    1.23217  -1.32393    0.186  0.18553    
+c_SUBTLEX_frequency_log:partner_type1:block1                                                    0.29850    0.37372   0.79872    0.424  0.42445    
+c_FASQUEL_concreteness:partner_type1:block1                                                     0.18598    0.71691   0.25942    0.795  0.79531    
+c_FASQUEL_image_agreement:c_FASQUEL_concreteness:block1                                         3.99638    2.71924   1.46967    0.142  0.14165    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:block1                                        1.91950    1.22710   1.56425    0.118  0.11776    
+c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:block1                                          -0.42438    0.92394  -0.45932    0.646  0.64600    
+c_FASQUEL_image_agreement:partner_type1:block1                                                 -0.54591    0.93449  -0.58418    0.559  0.55910    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type1          3.12448    3.66613   0.85226    0.394  0.39407    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:block1                -3.47731    3.66425  -0.94898    0.343  0.34263    
+c_SUBTLEX_frequency_log:c_FASQUEL_concreteness:partner_type1:block1                             0.28291    0.92292   0.30654    0.759  0.75919    
+c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type1:block1                           2.56821    2.72085   0.94390    0.345  0.34522    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:partner_type1:block1                          0.36519    1.23121   0.29661    0.767  0.76677    
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement:c_FASQUEL_concreteness:partner_type1:block1  -1.76191    3.66377  -0.48090    0.631  0.63059    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+optimizer (bobyqa) convergence code: 0 (OK)
+maxfun < 10 * length(par)^2 is not recommended.
+

@@ -1,0 +1,43 @@
+File_ID,File_name,VOT,correct,AR,error
+1,LEALCO-EEG_Audio_103_test_block1_partnerB_001.wav,1203,1
+2,LEALCO-EEG_Audio_103_test_block1_partnerB_002.wav,4207,0,Jot,4
+3,LEALCO-EEG_Audio_103_test_block1_partnerB_003.wav,6385,0,schiefes Fenster ,4
+4,LEALCO-EEG_Audio_103_test_block1_partnerB_004.wav,1276,0,Viereck ,2
+5,LEALCO-EEG_Audio_103_test_block1_partnerB_005.wav,2634,0,zwei Türen ,4
+6,LEALCO-EEG_Audio_103_test_block1_partnerB_006.wav,23268,0,seitlich gedrehter Klotz auf etwas,4
+7,LEALCO-EEG_Audio_103_test_block1_partnerB_007.wav,2965,0,Känguru ,4
+8,LEALCO-EEG_Audio_103_test_block1_partnerB_008.wav,2043,0,Rakete ,4
+9,LEALCO-EEG_Audio_103_test_block1_partnerB_009.wav,2903,0,Dino,4
+10,LEALCO-EEG_Audio_103_test_block1_partnerB_010.wav,1507,0,Haus,4
+11,LEALCO-EEG_Audio_103_test_block1_partnerB_011.wav,4802,0,Blume,4
+12,LEALCO-EEG_Audio_103_test_block1_partnerB_012.wav,1112,0,tanzender Mann ,2
+13,LEALCO-EEG_Audio_103_test_block1_partnerB_013.wav,1333,0,Treppe ,4
+14,LEALCO-EEG_Audio_103_test_block1_partnerB_014.wav,2674,1
+15,LEALCO-EEG_Audio_103_test_block1_partnerB_015.wav,4410,0,Haus,4
+16,LEALCO-EEG_Audio_103_test_block1_partnerB_016.wav,2295,0,meditierender Mann ,4
+17,LEALCO-EEG_Audio_103_test_block1_partnerB_017.wav,2946,0,Hund ,5
+18,LEALCO-EEG_Audio_103_test_block1_partnerB_018.wav,1891,0,Giraffe ,4
+19,LEALCO-EEG_Audio_103_test_block1_partnerB_019.wav,1231,1
+20,LEALCO-EEG_Audio_103_test_block1_partnerB_020.wav,2291,0,Schwan,2
+21,LEALCO-EEG_Audio_103_test_block1_partnerB_021.wav,2635,0,Fledermaus,4
+22,LEALCO-EEG_Audio_103_test_block1_partnerB_022.wav,1683,0,Ypsilon,4
+23,LEALCO-EEG_Audio_103_test_block1_partnerB_023.wav,982,0,Stuhl,2
+24,LEALCO-EEG_Audio_103_test_block1_partnerB_024.wav,6036,0,Abhang,4
+25,LEALCO-EEG_Audio_103_test_block1_partnerB_025.wav,688,1
+26,LEALCO-EEG_Audio_103_test_block1_partnerB_026.wav,1246,0,Klinge,4
+27,LEALCO-EEG_Audio_103_test_block1_partnerB_027.wav,3118,0,Stein,5
+28,LEALCO-EEG_Audio_103_test_block1_partnerB_028.wav,1621,1
+29,LEALCO-EEG_Audio_103_test_block1_partnerB_029.wav,1948,1
+30,LEALCO-EEG_Audio_103_test_block1_partnerB_030.wav,1535,1
+31,LEALCO-EEG_Audio_103_test_block1_partnerB_031.wav,1263,0,Tee,4
+32,LEALCO-EEG_Audio_103_test_block1_partnerB_032.wav,1055,0,schwangere Frau,2
+33,LEALCO-EEG_Audio_103_test_block1_partnerB_033.wav,2167,0,Raute,4
+34,LEALCO-EEG_Audio_103_test_block1_partnerB_034.wav,2301,0,Raute,4
+35,LEALCO-EEG_Audio_103_test_block1_partnerB_035.wav,1589,0,fallender Mann,2
+36,LEALCO-EEG_Audio_103_test_block1_partnerB_036.wav,976,0,Hase,2
+37,LEALCO-EEG_Audio_103_test_block1_partnerB_037.wav,8470,0,unkomplette Raute,2
+38,LEALCO-EEG_Audio_103_test_block1_partnerB_038.wav,2436,0,sitzende Person,4
+39,LEALCO-EEG_Audio_103_test_block1_partnerB_039.wav,2182,0,Trichter,5
+40,LEALCO-EEG_Audio_103_test_block1_partnerB_040.wav,3283,0,Brunnen,4
+41,LEALCO-EEG_Audio_103_test_block1_partnerB_041.wav,5706,0,Ente,4
+42,LEALCO-EEG_Audio_103_test_block1_partnerB_042.wav,4430,0,Origami ,4

@@ -1,0 +1,120 @@
+---
+title: "B_merge"
+---
+
+# LEALCO-EEG: merge all data *from test task*
+
+### Goal
+
+Generate one file containing all the relevant data from the test task of the LEALCO-BEH study.
+
+### Inputs
+
+-   the **PsychoPy input files** containing information about the presented stimuli and conditions
+
+-   the **demographics**;the table containing (by subject) information about age, language spoken and other demographics
+
+-   the **debriefing**: make sure that the column containing hte subjID does not contrin the apostrophe
+
+-   the **VOT files**: this file contains informatoon about naming latencies, accuracy, and type of errors committed. [Note]{.underline}: these files need to be freed of the BOM. As some files (for unexplained reasons) still have, it should first be removed "manually" by opening the files in Notepad++ \>Encoding \> UTF-8\>Save. These files are easy to spot because they are heavier than the ones encoded in UTF-8.
+
+### Output
+
+The output file is a large .csv table containing the entire data of the file in a long format. It puts together the PsychoPy input files, the demographics, the VOT files as well as the relevant information from the debriefing questionnaire.
+
+## Load packages
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(readxl)
+```
+
+## Define which files to read
+
+```{r}
+subjList <- c('101', '102', '103', '104', '105', '106', '107', '108', '109', '110',
+              '111', '112', '113', '114', '115', '116', '117', '118', '119', '120',
+              '121', '122', '123', '124', '125', '126', '127', '128', '129', '130',
+              '131', '132', '133', '134', '135', '136', '137', '138', '139', '140',
+              '141', '142', '143', '144', '145', '146', '147', '148', '149', '150',
+              '151', '152', '153', '154', '155', '156')
+
+partnerList <- c('A', 'B')
+blockList <- c('1', '2')
+```
+
+## Read files
+
+```{r}
+
+# ============== initialize empty df to be filled with all data from all subjects
+data <- data.frame()
+
+# ============== loop over files
+for (i_subjList in subjList) {
+  for (i_blockList in blockList) {
+    for (i_partnerList in partnerList) {
+      
+      print(i_subjList)
+      print(i_blockList)
+      print(i_partnerList)
+      
+      # ================ define input files
+      IV_filename <- sprintf('data/conditions/LEALCO-EEG_StimuliList_%s_test_block%s_partner%s.xlsx', i_subjList, i_blockList, i_partnerList)
+      demo_filename <- 'data/demographic/data_LEALCO-EEGdem_2025-06-04_12-52.csv'
+      VOT_filename <- sprintf('data/VOTandACC/%s_test_block%s_partner%s_final_VOTs.csv',i_subjList, i_blockList, i_partnerList) 
+      eeg_filename <- sprintf('data/EEG/LEALCO-EEG_%s_test_block%s_partner%s_exportLMM_all.csv',i_subjList, i_blockList, i_partnerList) 
+      debri_filename <- 'data/debrief/data_LEALCO-EEG_2025-06-04_12-56.csv'
+      
+      # ================ read files
+      IV <- read_excel(IV_filename)
+      demo <- read.csv(demo_filename, sep = ";", fileEncoding = "Latin1", check.names = F)
+      VOT <- read.csv(VOT_filename, sep = ",", fileEncoding = "Latin1", check.names = F)
+      debri <- read.csv(debri_filename, sep = ";", fileEncoding="Latin1", check.names = F)
+      eeg <- read.csv(eeg_filename)
+      eeg$subjID <- as_factor(eeg$subjID)
+      
+      # ================ clean up data
+      
+      # rename some variables fo facilitate later joining of dataframes
+      colnames(demo)[17] <- "subjID"
+      colnames(debri)[18] <- "subjID"
+      
+      # ================= make into factors
+      IV$subjID <- as_factor(as.integer(IV$subjID))
+      demo$subjID <- as_factor(demo$subjID)
+      debri$subjID <- as_factor(debri$subjID)
+      #eeg$subjID <- as_factor(eeg$subjID)
+      
+      # =============== Put together the data stepwise in one file (by subject, partner & block)
+      # merge condition file with relevant variables of the VOT file
+      a <- bind_cols(IV, select(VOT, VOT, correct, AR, error))
+      # add  variables from the dmographic questionnaire
+      b <- left_join(a, demo, by='subjID')
+      # add  only relevant variables from the debriefing questionnaire
+      current <- left_join(b, select(debri, subjID, B101, B201, H101, H201, K101_01, N101, N201, S101, S201, T101, T201), by='subjID')
+      # add the EEG data
+      current2 <- left_join(current, eeg, by = c("subjID" = "subjID", "block" = "block", "partner" = "partner", "Trial" = "Trial"))
+      
+      # ============ append to dataframe
+      data <- rbind(data, current2)
+      
+      
+    } #  end of partnerList
+  } #  end of blockList
+} #  end of subjList
+```
+
+```{r}
+ data$error[is.na(data$error)] = 'correct'
+
+```
+
+## Save
+
+```{r}
+write.csv(data, 'data/LEALCO-EEG_test_merged_data_eeg_all.csv', row.names=FALSE, fileEncoding = "UTF-8")
+```
+
+## 
