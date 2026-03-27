@@ -2126,6 +2126,13 @@ acc_wSubj_partner <- data_trained %>%
   summarise(mean_ACC = mean(correct))
 
 # aggregate VOTinv (within subjects) only for correct trials
+vot_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean_VOT = mean(VOT))
+
+# aggregate VOTinv (within subjects) only for correct trials
 votINV_wSubj_partner <- data_trained %>%
   filter(correct == 1) %>%
   filter(!subjID %in%  exclusion_vot) %>%
@@ -2140,15 +2147,22 @@ EEG_wSubj_partner <- data_trained %>%
   summarise(mean_P200 = mean(P200, na.rm=TRUE), mean_P300 = mean(P300, na.rm=TRUE) )
 
 # merge all aggragated DVs
-entrainment_data <- merge(acc_wSubj_partner,votINV_wSubj_partner,by=c("subjID","partner_type"))
+entrainment_data <- merge(acc_wSubj_partner, vot_wSubj_partner,by=c("subjID","partner_type"))
+entrainment_data <- merge(x = entrainment_data, y = votINV_wSubj_partner, by = c("subjID", "partner_type"), all.x = TRUE)
 entrainment_data <- merge(x = entrainment_data, y = EEG_wSubj_partner, by = c("subjID", "partner_type"), all.x = TRUE)
 
 # pivot from long to wide
 entrainment_data <- entrainment_data %>% 
   pivot_wider(
     names_from = partner_type, 
-    values_from = c(mean_ACC, mean_VOTinv, mean_P200, mean_P300)
+    values_from = c(mean_ACC, mean_VOT, mean_VOTinv, mean_P200, mean_P300)
   )
+
+```
+
+#### Version 1 (with inverted VOT)
+
+```{r}
 
  # calculate entrainment scores (same - different)
 entrainment_data$entrainment_ACC <- entrainment_data$mean_ACC_same - entrainment_data$mean_ACC_different
@@ -2166,13 +2180,47 @@ s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
   ylab('Entrainment LM\n(same vs. different)') +
   theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) 
 s
-ggsave("output_figures/LEALCO-EEG_entrainment_correlation.pdf", width=6, height=3.5)
+ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, height=3.5)
 
 # correlation
 corr <- cor.test(entrainment_data$entrainment_ACC, entrainment_data$entrainment_VOTinv)
-sink('output_stats/LEALCO-EEG_entrainment_correlation.txt')
+sink('output_stats/LEALCO-EEG_entrainment_correlation_invVOT.txt')
 print(corr)
 sink()
+```
+
+#### Version 2 (with raw VOT)
+
+```{r}
+
+ # calculate entrainment scores (same - different)
+entrainment_data$entrainment_ACC <- entrainment_data$mean_ACC_same - entrainment_data$mean_ACC_different
+entrainment_data$entrainment_VOT <- (entrainment_data$mean_VOT_same - entrainment_data$mean_VOT_different)
+
+# scatterplot
+s <- ggplot(entrainment_data, aes(x=entrainment_VOT, y=entrainment_ACC)) +
+  geom_point() +
+  stat_smooth(method=lm, fullrange=TRUE, color = 'black') + 
+  geom_hline(yintercept=0, linetype="dotted") +
+  geom_vline(xintercept=0, linetype="dotted") +
+  xlim(-1600, 1600) +
+  ylim(-0.5, 0.5) + 
+  xlab('Entrainment NL\n(same vs. different)') +
+  ylab('Entrainment LM\n(same vs. different)') +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) 
+s
+ggsave("output_figures/LEALCO-EEG_entrainment_correlation_rawVOT.pdf", width=6, height=3.5)
+
+# correlation
+corr <- cor.test(entrainment_data$entrainment_ACC, entrainment_data$entrainment_VOT)
+sink('output_stats/LEALCO-EEG_entrainment_correlation_rawVOT.txt')
+print(corr)
+sink()
+```
+
+#### PCA
+
+```{r}
 
 # PCA
 pca <- prcomp(entrainment_data[c('entrainment_ACC','entrainment_VOTinv')], center = TRUE, scale = TRUE)

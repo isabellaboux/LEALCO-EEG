@@ -1,0 +1,12 @@
+
+	Pearson's product-moment correlation
+
+data:  entrainment_data$entrainment_ACC and entrainment_data$entrainment_VOT
+t = -2.9865, df = 49, p-value = 0.004396
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+ -0.6028168 -0.1310098
+sample estimates:
+       cor 
+-0.3924253 
+
