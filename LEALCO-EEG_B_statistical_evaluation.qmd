@@ -1547,6 +1547,12 @@ dev.off()
 bb
 ```
 
+### LLM (\~acc)
+
+```{r}
+
+```
+
 ### LMM (only block 1)
 
 ```{r}
@@ -2302,52 +2308,56 @@ sink()
 Prepara data for LMM.
 
 ```{r}
-# add the PC1 data to the tria-by-trial P200 data
-P200 <- merge(x = P200, y = entrainment_data[c('subjID', 'PC1', 'entrainment_VOTinv', 'entrainment_ACC')], by = "subjID", all.x = TRUE)
+# add the PC1 data to the trial-by-trial P200 data
+P200 <- merge(x = P200, y = entrainment_data[c('subjID', 'PC1', 'entrainment_VOTinv', 'entrainment_VOT', 'entrainment_ACC')], by = "subjID", all.x = TRUE)
 
 # center PC1
 P200 <- P200 %>%
-  mutate(c_PC1 = PC1 - mean(PC1, na.rm=TRUE))
+  mutate(c_PC1 = PC1 - mean(PC1, na.rm=TRUE),
+         c_entrainment_VOTinv = entrainment_VOTinv - mean(entrainment_VOTinv, na.rm=TRUE),
+         c_entrainment_VOT = entrainment_VOT - mean(entrainment_VOT, na.rm=TRUE),
+         c_entrainment_ACC = entrainment_ACC - mean(entrainment_ACC, na.rm=TRUE)
+         )
 ```
 
-Run LMM.
+##### P200 \~ entrainment VOTinv
 
 ```{r}
-# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
 f <- P200 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness * entrainment_VOTinv +
      (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness*entrainment_VOTinv | subjID) +
      (partner_type*block*entrainment_VOTinv | target_label)
 
 # select the maximal model that still converges
-m_P200_entr <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
-summary(m_P200_entr)
+m_P200_entr_VOTinv <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOTinv)
 
 # save winning model
-sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM.txt")
-summary(m_P200_entr)
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv.txt")
+summary(m_P200_entr_VOTinv)
 sink(file = NULL)
 ```
 
-#### \>Follow-up: Patner Type x PC1
+##### \>Follow-up: Patner Type x entrainment_VOTinv
 
 ```{r}
 # make post-hoc with tukey correction
-emm_tukey <-emmeans(m_P200_entr@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
 P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_PC1.csv", row.names = FALSE)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv.csv", row.names = FALSE)
 
 # make post-hoc with no correction
-emm_none <-emmeans(m_P200_entr@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
 P200_ph_none <- as.data.frame(emm_none$contrasts)
 P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
 P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_PC1.csv", row.names = FALSE)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv.csv", row.names = FALSE)
 
 # generate predicted data (but don't plot it yet with emmip)
 (mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv), median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
                 partner_type=c("same","different")))
-P200_marginalMeans <- emmip(m_P200_entr@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
-write.csv(P200_marginalMeans$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_PC1.csv", row.names = FALSE)
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(P200_marginalMeans$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOTinv.csv", row.names = FALSE)
 
 #P200_marginalMeans$data$entrainment_VOTinv <- P200_marginalMeans$data$entrainment_VOTinv - mean(P200$PC1)
 
@@ -2365,19 +2375,19 @@ p1 <- ggplot(P200_marginalMeans$data, aes(x=entrainment_VOTinv, y=yvar, color=pa
   geom_hline(yintercept=0, linetype=3) +
   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
 p1
-ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_PC1.pdf", width=4, height=3)
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv.pdf", width=4, height=3)
 ```
 
-#### \>Folow-up: Patner Type x Image Agreement
+##### \>Folow-up: Patner Type x Image Agreement
 
 ```{r}
 # make post-hoc with tukey correction
-emm_tukey <-emmeans(m_P200_entr@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
 P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
 write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_imageagreement.csv", row.names = FALSE)
 
 # make post-hoc with no correction
-emm_none <-emmeans(m_P200_entr@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
 P200_ph_none <- as.data.frame(emm_none$contrasts)
 P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
 P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
@@ -2386,7 +2396,7 @@ write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_
 # generate predicted data (but don't plot it yet with emmip)
 (mylist <- list(c_FASQUEL_image_agreement=c(min(P200$c_FASQUEL_image_agreement), median(P200$c_FASQUEL_image_agreement), max(P200$c_FASQUEL_image_agreement)),
                 partner_type=c("same","different")))
-P200_marginalMeans <- emmip(m_P200_entr@model, partner_type  ~ c_FASQUEL_image_agreement, at=mylist,CIs=TRUE, plotit=TRUE)
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, partner_type  ~ c_FASQUEL_image_agreement, at=mylist,CIs=TRUE, plotit=TRUE)
 
 # plot
 p1 <- ggplot(P200_marginalMeans$data, aes(x=c_FASQUEL_image_agreement, y=yvar, color=partner_type, group=partner_type)) +
@@ -2409,25 +2419,25 @@ ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_imageagreement.pdf",
 #                 terms = c("c_FASQUEL_image_agreement [all]","partner_type"), colors = pal1, mdrt.values = c("all"), se=TRUE)
 ```
 
-#### \>Follow up: Partner Type x PC1 x Frequency
+##### \>Follow up: Partner Type x entrainment_VOTinv x Frequency
 
 ```{r}
 
 # make post-hoc with tukey correction
-emm_tukey <-emmeans(m_P200_entr@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5,  1)))
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5,  1)))
 P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_PC1_x_frequency.csv", row.names = FALSE)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv_x_frequency.csv", row.names = FALSE)
 
 # make post-hoc without correction
-emm_none <-emmeans(m_P200_entr@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
 P200_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_PC1_x_frequency.csv", row.names = FALSE)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv_x_frequency.csv", row.names = FALSE)
 
 # generate predicted data (but don't plot it yet with emmip)
 (mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv),median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
                 c_SUBTLEX_frequency_log=c(min(P200$c_SUBTLEX_frequency_log), median (P200$c_SUBTLEX_frequency_log), max(P200$c_SUBTLEX_frequency_log)),
                 partner_type=c("same","different")))
-P200_marginalMeans <- emmip(m_P200_entr@model, c_SUBTLEX_frequency_log ~ partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, c_SUBTLEX_frequency_log ~ partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
 
 # plot
 p <- ggplot(P200_marginalMeans$data, aes(x=partner_type, y=yvar, color=partner_type, group=c_SUBTLEX_frequency_log)) +
@@ -2437,12 +2447,128 @@ p <- ggplot(P200_marginalMeans$data, aes(x=partner_type, y=yvar, color=partner_t
   scale_fill_manual(values = pal1) +
   scale_color_manual(values = pal1) +
   facet_grid(c_SUBTLEX_frequency_log ~ entrainment_VOTinv) +
-  labs(y="P200 (\u00b5V)", x="PC1 (centered)") +
+  labs(y="P200 (\u00b5V)", x="Entrainment NL (centered)") +
   ylim(-4, 20) +
   geom_hline(yintercept=0, linetype=3) +
   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
 p
-ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_PC1_x_frequency.pdf")
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_x_frequency.pdf")
+```
+
+##### P200 \~ entrainment_VOT
+
+```{r}
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness * entrainment_VOT +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness*entrainment_VOT | subjID) +
+     (partner_type*block*entrainment_VOT | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_VOT <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOT)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOT.txt")
+summary(m_P200_entr_VOT)
+sink(file = NULL)
+```
+
+##### \>Follow-up: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200_entr_VOT@model, pairwise ~ partner_type * entrainment_VOT, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOT.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200_entr_VOT@model, pairwise ~ partner_type * entrainment_VOT, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOT.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOT=c(min(P200$entrainment_VOT), median(P200$entrainment_VOT), max(P200$entrainment_VOT)),
+                partner_type=c("same","different")))
+P200_marginalMeans <- emmip(m_P200_entr_VOT@model, partner_type  ~ entrainment_VOT, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(P200_marginalMeans$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOT.csv", row.names = FALSE)
+
+#P200_marginalMeans$data$entrainment_VOTinv <- P200_marginalMeans$data$entrainment_VOTinv - mean(P200$PC1)
+
+# plot 
+p1 <- ggplot(P200_marginalMeans$data, aes(x=entrainment_VOT, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(200)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=100, position=position_dodge(200)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  #facet_grid(cols = "PC1") +
+  labs(y="P200 (\u00b5V)", x="Entrainment NL") +
+  ylim(-4, 14) +
+  #xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOT.pdf", width=4, height=3)
+```
+
+##### P200 \~ entrainment_ACC
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness * c_entrainment_ACC +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness*entrainment_VOTinv | subjID) +
+     (partner_type*block*entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_acc <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_acc)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_acc.txt")
+summary(m_P200_entr_acc)
+sink(file = NULL)
+```
+
+##### \>Follow-up: Patner Type x entrainment_ACC
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200_entr_acc@model, pairwise ~ partner_type * c_entrainment_ACC, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrACC.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200_entr_acc@model, pairwise ~ partner_type * c_entrainment_ACC, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrACC.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(c_entrainment_ACC=c(min(P200$c_entrainment_ACC), median(P200$c_entrainment_ACC), max(P200$c_entrainment_ACC)),
+                partner_type=c("same","different")))
+P200_marginalMeans <- emmip(m_P200_entr_acc@model, partner_type  ~ c_entrainment_ACC, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(P200_marginalMeans$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrACC.csv", row.names = FALSE)
+
+#P200_marginalMeans$data$entrainment_VOTinv <- P200_marginalMeans$data$entrainment_VOTinv - mean(P200$PC1)
+
+# plot 
+p1 <- ggplot(P200_marginalMeans$data, aes(x=c_entrainment_ACC, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.1)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.1, position=position_dodge(0.1)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  #facet_grid(cols = "PC1") +
+  labs(y="P200 (\u00b5V)", x="Entrainment LM") +
+  ylim(-4, 14) +
+  xlim(-0.5, 0.5) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrACC.pdf", width=4, height=3)
 ```
 
 #### LMM on 200 with offset
