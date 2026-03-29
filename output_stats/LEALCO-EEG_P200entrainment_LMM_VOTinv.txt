@@ -1,34 +1,62 @@
 Linear mixed model fit by REML
 (p-values based on Wald z-scores) ['lmerMod']
-Formula: P200 ~ 1 + partner_type + entrainment_VOTinv + partner_type:entrainment_VOTinv +      c_FASQUEL_concreteness + entrainment_VOTinv:c_FASQUEL_concreteness +  
-    block + partner_type:block + entrainment_VOTinv:block + partner_type:entrainment_VOTinv:block +      c_FASQUEL_concreteness:block + entrainment_VOTinv:c_FASQUEL_concreteness:block +  
-    c_SUBTLEX_frequency_log + c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +      block:c_SUBTLEX_frequency_log + c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +  
-    entrainment_VOTinv:c_SUBTLEX_frequency_log + entrainment_VOTinv:block:c_SUBTLEX_frequency_log +      entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
-    entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +      c_FASQUEL_image_agreement + block:c_FASQUEL_image_agreement +  
-    partner_type:c_FASQUEL_image_agreement + partner_type:c_FASQUEL_concreteness +      partner_type:entrainment_VOTinv:c_FASQUEL_concreteness +  
-    partner_type:c_FASQUEL_concreteness:block + partner_type:block:c_FASQUEL_image_agreement +      entrainment_VOTinv:c_FASQUEL_image_agreement + entrainment_VOTinv:block:c_FASQUEL_image_agreement +  
-    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement + block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      partner_type:entrainment_VOTinv:c_FASQUEL_image_agreement +  
+Formula: P200 ~ 1 + partner_type + entrainment_VOTinv + partner_type:entrainment_VOTinv +  
+    c_FASQUEL_concreteness + entrainment_VOTinv:c_FASQUEL_concreteness +  
+    block + partner_type:block + entrainment_VOTinv:block + partner_type:entrainment_VOTinv:block +  
+    c_FASQUEL_concreteness:block + entrainment_VOTinv:c_FASQUEL_concreteness:block +  
+    c_SUBTLEX_frequency_log + c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
+    block:c_SUBTLEX_frequency_log + c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +  
+    entrainment_VOTinv:c_SUBTLEX_frequency_log + entrainment_VOTinv:block:c_SUBTLEX_frequency_log +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +  
+    c_FASQUEL_image_agreement + block:c_FASQUEL_image_agreement +  
+    partner_type:c_FASQUEL_image_agreement + partner_type:c_FASQUEL_concreteness +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness +  
+    partner_type:c_FASQUEL_concreteness:block + partner_type:block:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:c_FASQUEL_image_agreement + entrainment_VOTinv:block:c_FASQUEL_image_agreement +  
+    c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement + block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_image_agreement +  
     partner_type:c_SUBTLEX_frequency_log + partner_type:entrainment_VOTinv:c_SUBTLEX_frequency_log +  
-    partner_type:block:c_SUBTLEX_frequency_log + partner_type:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +      partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
-    partner_type:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +      partner_type:entrainment_VOTinv:block:c_SUBTLEX_frequency_log +  
-    partner_type:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      partner_type:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    c_FASQUEL_concreteness:c_FASQUEL_image_agreement + partner_type:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +      c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
-    partner_type:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +      partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block +  
-    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +      entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +  
-    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +      entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    entrainment_VOTinv:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      entrainment_VOTinv:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
-    partner_type:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      partner_type:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      partner_type:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    partner_type:entrainment_VOTinv:block:c_FASQUEL_image_agreement +      partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
+    partner_type:block:c_SUBTLEX_frequency_log + partner_type:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log +  
+    partner_type:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +  
+    partner_type:entrainment_VOTinv:block:c_SUBTLEX_frequency_log +  
+    partner_type:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    c_FASQUEL_concreteness:c_FASQUEL_image_agreement + partner_type:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +  
+    c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
+    partner_type:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:block:c_FASQUEL_image_agreement +  
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_FASQUEL_image_agreement +  
     partner_type:entrainment_VOTinv:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
-    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +      (1 + entrainment_VOTinv + block + partner_type | subjID) +      (1 | target_label)
+    partner_type:entrainment_VOTinv:c_FASQUEL_concreteness:block:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement +  
+    (1 + entrainment_VOTinv + block + partner_type | subjID) +      (1 | target_label)
    Data: P200
-Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
-        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",          check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",  
-        check.scaleX = "warning", check.formula.LHS = "stop"),      checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list( 
-        action = "message", tol = 1e-04), check.conv.hess = list(         action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,  
+    calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",  
+        check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",  
+        check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",  
+        tol = 0.002, relTol = NULL), check.conv.singular = list( 
+        action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
 
 REML criterion at convergence: 27447.6
 
@@ -47,70 +75,330 @@ Random effects:
 Number of obs: 3946, groups:  target_label, 56; subjID, 47
 
 Fixed effects:
-                                                                                                                  Estimate Std. Error t value Pr(>|t|)    
-(Intercept)                                                                                                       3.438640   0.424546   8.100 5.52e-16 ***
-partner_type1                                                                                                    -0.344676   0.188912  -1.825  0.06807 .  
-entrainment_VOTinv                                                                                               -0.074627   0.403071  -0.185  0.85311    
-c_FASQUEL_concreteness                                                                                            0.085740   0.656832   0.131  0.89614    
-block1                                                                                                           -0.095697   0.189761  -0.504  0.61405    
-c_SUBTLEX_frequency_log                                                                                          -0.455668   0.371748  -1.226  0.22029    
-c_FASQUEL_image_agreement                                                                                        -0.857565   0.799188  -1.073  0.28325    
-partner_type1:entrainment_VOTinv                                                                                  0.599359   0.224016   2.676  0.00746 ** 
-entrainment_VOTinv:c_FASQUEL_concreteness                                                                         0.091445   0.457872   0.200  0.84170    
-partner_type1:block1                                                                                             -0.241581   0.177716  -1.359  0.17403    
-entrainment_VOTinv:block1                                                                                         0.044368   0.184476   0.241  0.80993    
-c_FASQUEL_concreteness:block1                                                                                    -0.463985   0.467088  -0.993  0.32054    
-c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                   -1.253256   0.863443  -1.451  0.14665    
-block1:c_SUBTLEX_frequency_log                                                                                    0.070230   0.278300   0.252  0.80077    
-entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                       -0.039174   0.269746  -0.145  0.88453    
-block1:c_FASQUEL_image_agreement                                                                                  0.383526   0.576826   0.665  0.50612    
-partner_type1:c_FASQUEL_image_agreement                                                                           0.719492   0.594538   1.210  0.22621    
-partner_type1:c_FASQUEL_concreteness                                                                             -0.429038   0.479979  -0.894  0.37139    
-entrainment_VOTinv:c_FASQUEL_image_agreement                                                                     -0.581276   0.562684  -1.033  0.30158    
-c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                -0.609294   0.967480  -0.630  0.52884    
-partner_type1:c_SUBTLEX_frequency_log                                                                            -0.273750   0.285556  -0.959  0.33773    
-c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                 -0.905718   1.194326  -0.758  0.44824    
-partner_type1:entrainment_VOTinv:block1                                                                           0.049151   0.172743   0.285  0.77600    
-entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                  0.981079   0.457058   2.147  0.03183 *  
-c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                             0.302033   0.628708   0.480  0.63094    
-entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                -0.299750   0.268292  -1.117  0.26389    
-entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                -0.154773   0.617210  -0.251  0.80200    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                          -0.631235   0.578782  -1.091  0.27544    
-partner_type1:c_FASQUEL_concreteness:block1                                                                       0.766168   0.466939   1.641  0.10083    
-partner_type1:block1:c_FASQUEL_image_agreement                                                                   -0.528256   0.577127  -0.915  0.36002    
-entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                              -0.372530   0.561129  -0.664  0.50676    
-block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                         -1.423990   0.708160  -2.011  0.04434 *  
-partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                        0.891214   0.706028   1.262  0.20684    
-partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                          0.946799   0.323758   2.924  0.00345 ** 
-partner_type1:block1:c_SUBTLEX_frequency_log                                                                     -0.317889   0.278094  -1.143  0.25300    
-partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                      0.229904   0.644712   0.357  0.72139    
-partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                   0.294176   0.731655   0.402  0.68763    
-partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                    1.187691   0.994542   1.194  0.23240    
-c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                           0.003181   0.936142   0.003  0.99729    
-entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                               0.419053   0.905236   0.463  0.64342    
-entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                              0.439638   0.692627   0.635  0.52560    
-c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                         -0.149289   2.007533  -0.074  0.94072    
-entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                          0.218205   0.614743   0.355  0.72262    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                   1.243054   0.754524   1.647  0.09946 .  
-partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                               0.777762   0.628432   1.238  0.21586    
-partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                   0.202218   0.268360   0.754  0.45113    
-partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                            0.125559   0.708918   0.177  0.85942    
-partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                            -0.236162   0.943268  -0.250  0.80230    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                    0.270275   0.457539   0.591  0.55471    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                -1.738848   1.084270  -1.604  0.10878    
-entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                       1.334393   0.688889   1.937  0.05274 .  
-entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                        0.111581   0.892472   0.125  0.90050    
-partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                0.180134   0.856120   0.210  0.83335    
-entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                      -0.871594   1.397275  -0.624  0.53277    
-partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                            0.907640   1.489354   0.609  0.54225    
-c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                   0.617586   1.444178   0.428  0.66891    
-partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                 0.207448   0.562215   0.369  0.71214    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                            0.424045   0.614580   0.690  0.49021    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement        -2.657400   1.762777  -1.508  0.13168    
-entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement               -2.032469   1.394806  -1.457  0.14507    
-partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                    -1.200829   1.445621  -0.831  0.40616    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                         -1.125308   0.899255  -1.251  0.21080    
-partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                         0.534176   0.689653   0.775  0.43860    
-partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement -1.069320   1.397193  -0.765  0.44407    
+                                                                                                                  Estimate
+(Intercept)                                                                                                       3.438640
+partner_type1                                                                                                    -0.344676
+entrainment_VOTinv                                                                                               -0.074627
+c_FASQUEL_concreteness                                                                                            0.085740
+block1                                                                                                           -0.095697
+c_SUBTLEX_frequency_log                                                                                          -0.455668
+c_FASQUEL_image_agreement                                                                                        -0.857565
+partner_type1:entrainment_VOTinv                                                                                  0.599359
+entrainment_VOTinv:c_FASQUEL_concreteness                                                                         0.091445
+partner_type1:block1                                                                                             -0.241581
+entrainment_VOTinv:block1                                                                                         0.044368
+c_FASQUEL_concreteness:block1                                                                                    -0.463985
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                   -1.253256
+block1:c_SUBTLEX_frequency_log                                                                                    0.070230
+entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                       -0.039174
+block1:c_FASQUEL_image_agreement                                                                                  0.383526
+partner_type1:c_FASQUEL_image_agreement                                                                           0.719492
+partner_type1:c_FASQUEL_concreteness                                                                             -0.429038
+entrainment_VOTinv:c_FASQUEL_image_agreement                                                                     -0.581276
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                -0.609294
+partner_type1:c_SUBTLEX_frequency_log                                                                            -0.273750
+c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                 -0.905718
+partner_type1:entrainment_VOTinv:block1                                                                           0.049151
+entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                  0.981079
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                             0.302033
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                -0.299750
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                -0.154773
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                          -0.631235
+partner_type1:c_FASQUEL_concreteness:block1                                                                       0.766168
+partner_type1:block1:c_FASQUEL_image_agreement                                                                   -0.528256
+entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                              -0.372530
+block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                         -1.423990
+partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                        0.891214
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                          0.946799
+partner_type1:block1:c_SUBTLEX_frequency_log                                                                     -0.317889
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                      0.229904
+partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                   0.294176
+partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                    1.187691
+c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                           0.003181
+entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                               0.419053
+entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                              0.439638
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                         -0.149289
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                          0.218205
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                   1.243054
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                               0.777762
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                   0.202218
+partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                            0.125559
+partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                            -0.236162
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                    0.270275
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                -1.738848
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                       1.334393
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                        0.111581
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                0.180134
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                      -0.871594
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                            0.907640
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                   0.617586
+partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                 0.207448
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                            0.424045
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement        -2.657400
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement               -2.032469
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                    -1.200829
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                         -1.125308
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                         0.534176
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement -1.069320
+                                                                                                                 Std. Error
+(Intercept)                                                                                                        0.424546
+partner_type1                                                                                                      0.188912
+entrainment_VOTinv                                                                                                 0.403071
+c_FASQUEL_concreteness                                                                                             0.656832
+block1                                                                                                             0.189761
+c_SUBTLEX_frequency_log                                                                                            0.371748
+c_FASQUEL_image_agreement                                                                                          0.799188
+partner_type1:entrainment_VOTinv                                                                                   0.224016
+entrainment_VOTinv:c_FASQUEL_concreteness                                                                          0.457872
+partner_type1:block1                                                                                               0.177716
+entrainment_VOTinv:block1                                                                                          0.184476
+c_FASQUEL_concreteness:block1                                                                                      0.467088
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                     0.863443
+block1:c_SUBTLEX_frequency_log                                                                                     0.278300
+entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                         0.269746
+block1:c_FASQUEL_image_agreement                                                                                   0.576826
+partner_type1:c_FASQUEL_image_agreement                                                                            0.594538
+partner_type1:c_FASQUEL_concreteness                                                                               0.479979
+entrainment_VOTinv:c_FASQUEL_image_agreement                                                                       0.562684
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                  0.967480
+partner_type1:c_SUBTLEX_frequency_log                                                                              0.285556
+c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                   1.194326
+partner_type1:entrainment_VOTinv:block1                                                                            0.172743
+entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                   0.457058
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                              0.628708
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                  0.268292
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                  0.617210
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                            0.578782
+partner_type1:c_FASQUEL_concreteness:block1                                                                        0.466939
+partner_type1:block1:c_FASQUEL_image_agreement                                                                     0.577127
+entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                                0.561129
+block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                           0.708160
+partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                         0.706028
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                           0.323758
+partner_type1:block1:c_SUBTLEX_frequency_log                                                                       0.278094
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                       0.644712
+partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                    0.731655
+partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                     0.994542
+c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                            0.936142
+entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                0.905236
+entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                               0.692627
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                           2.007533
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                           0.614743
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                    0.754524
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                0.628432
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                    0.268360
+partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                             0.708918
+partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                              0.943268
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                     0.457539
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                  1.084270
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                        0.688889
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                         0.892472
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                 0.856120
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                        1.397275
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                             1.489354
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                    1.444178
+partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                  0.562215
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                             0.614580
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement          1.762777
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                 1.394806
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                      1.445621
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                           0.899255
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                          0.689653
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement   1.397193
+                                                                                                                 t value
+(Intercept)                                                                                                        8.100
+partner_type1                                                                                                     -1.825
+entrainment_VOTinv                                                                                                -0.185
+c_FASQUEL_concreteness                                                                                             0.131
+block1                                                                                                            -0.504
+c_SUBTLEX_frequency_log                                                                                           -1.226
+c_FASQUEL_image_agreement                                                                                         -1.073
+partner_type1:entrainment_VOTinv                                                                                   2.676
+entrainment_VOTinv:c_FASQUEL_concreteness                                                                          0.200
+partner_type1:block1                                                                                              -1.359
+entrainment_VOTinv:block1                                                                                          0.241
+c_FASQUEL_concreteness:block1                                                                                     -0.993
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                    -1.451
+block1:c_SUBTLEX_frequency_log                                                                                     0.252
+entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                        -0.145
+block1:c_FASQUEL_image_agreement                                                                                   0.665
+partner_type1:c_FASQUEL_image_agreement                                                                            1.210
+partner_type1:c_FASQUEL_concreteness                                                                              -0.894
+entrainment_VOTinv:c_FASQUEL_image_agreement                                                                      -1.033
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                 -0.630
+partner_type1:c_SUBTLEX_frequency_log                                                                             -0.959
+c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                  -0.758
+partner_type1:entrainment_VOTinv:block1                                                                            0.285
+entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                   2.147
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                              0.480
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                 -1.117
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                 -0.251
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                           -1.091
+partner_type1:c_FASQUEL_concreteness:block1                                                                        1.641
+partner_type1:block1:c_FASQUEL_image_agreement                                                                    -0.915
+entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                               -0.664
+block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                          -2.011
+partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                         1.262
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                           2.924
+partner_type1:block1:c_SUBTLEX_frequency_log                                                                      -1.143
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                       0.357
+partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                    0.402
+partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                     1.194
+c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                            0.003
+entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                0.463
+entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                               0.635
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                          -0.074
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                           0.355
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                    1.647
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                1.238
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                    0.754
+partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                             0.177
+partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                             -0.250
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                     0.591
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                 -1.604
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                        1.937
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                         0.125
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                 0.210
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                       -0.624
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                             0.609
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                    0.428
+partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                  0.369
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                             0.690
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement         -1.508
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                -1.457
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                     -0.831
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                          -1.251
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                          0.775
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement  -0.765
+                                                                                                                 Pr(>|t|)
+(Intercept)                                                                                                      5.52e-16
+partner_type1                                                                                                     0.06807
+entrainment_VOTinv                                                                                                0.85311
+c_FASQUEL_concreteness                                                                                            0.89614
+block1                                                                                                            0.61405
+c_SUBTLEX_frequency_log                                                                                           0.22029
+c_FASQUEL_image_agreement                                                                                         0.28325
+partner_type1:entrainment_VOTinv                                                                                  0.00746
+entrainment_VOTinv:c_FASQUEL_concreteness                                                                         0.84170
+partner_type1:block1                                                                                              0.17403
+entrainment_VOTinv:block1                                                                                         0.80993
+c_FASQUEL_concreteness:block1                                                                                     0.32054
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                    0.14665
+block1:c_SUBTLEX_frequency_log                                                                                    0.80077
+entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                        0.88453
+block1:c_FASQUEL_image_agreement                                                                                  0.50612
+partner_type1:c_FASQUEL_image_agreement                                                                           0.22621
+partner_type1:c_FASQUEL_concreteness                                                                              0.37139
+entrainment_VOTinv:c_FASQUEL_image_agreement                                                                      0.30158
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                 0.52884
+partner_type1:c_SUBTLEX_frequency_log                                                                             0.33773
+c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                  0.44824
+partner_type1:entrainment_VOTinv:block1                                                                           0.77600
+entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                  0.03183
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                             0.63094
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                 0.26389
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                 0.80200
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                           0.27544
+partner_type1:c_FASQUEL_concreteness:block1                                                                       0.10083
+partner_type1:block1:c_FASQUEL_image_agreement                                                                    0.36002
+entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                               0.50676
+block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                          0.04434
+partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                        0.20684
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                          0.00345
+partner_type1:block1:c_SUBTLEX_frequency_log                                                                      0.25300
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                      0.72139
+partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                   0.68763
+partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                    0.23240
+c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                           0.99729
+entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                               0.64342
+entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                              0.52560
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                          0.94072
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                          0.72262
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                   0.09946
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                               0.21586
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                   0.45113
+partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                            0.85942
+partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                             0.80230
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                    0.55471
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                 0.10878
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                       0.05274
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                        0.90050
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                0.83335
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                       0.53277
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                            0.54225
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                   0.66891
+partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                 0.71214
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                            0.49021
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement         0.13168
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                0.14507
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                     0.40616
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                          0.21080
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                         0.43860
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement  0.44407
+                                                                                                                    
+(Intercept)                                                                                                      ***
+partner_type1                                                                                                    .  
+entrainment_VOTinv                                                                                                  
+c_FASQUEL_concreteness                                                                                              
+block1                                                                                                              
+c_SUBTLEX_frequency_log                                                                                             
+c_FASQUEL_image_agreement                                                                                           
+partner_type1:entrainment_VOTinv                                                                                 ** 
+entrainment_VOTinv:c_FASQUEL_concreteness                                                                           
+partner_type1:block1                                                                                                
+entrainment_VOTinv:block1                                                                                           
+c_FASQUEL_concreteness:block1                                                                                       
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                                      
+block1:c_SUBTLEX_frequency_log                                                                                      
+entrainment_VOTinv:c_SUBTLEX_frequency_log                                                                          
+block1:c_FASQUEL_image_agreement                                                                                    
+partner_type1:c_FASQUEL_image_agreement                                                                             
+partner_type1:c_FASQUEL_concreteness                                                                                
+entrainment_VOTinv:c_FASQUEL_image_agreement                                                                        
+c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                                   
+partner_type1:c_SUBTLEX_frequency_log                                                                               
+c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                                    
+partner_type1:entrainment_VOTinv:block1                                                                             
+entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                                 *  
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                               
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                                   
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                   
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness                                                             
+partner_type1:c_FASQUEL_concreteness:block1                                                                         
+partner_type1:block1:c_FASQUEL_image_agreement                                                                      
+entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                                 
+block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                         *  
+partner_type1:entrainment_VOTinv:c_FASQUEL_image_agreement                                                          
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log                                                         ** 
+partner_type1:block1:c_SUBTLEX_frequency_log                                                                        
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                                        
+partner_type1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                     
+partner_type1:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                      
+c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                                             
+entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                                 
+entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                                
+c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                            
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                            
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log                                  .  
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                                                 
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log                                                     
+partner_type1:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                              
+partner_type1:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                               
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1                                                      
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_FASQUEL_image_agreement                                   
+entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                      .  
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                                          
+partner_type1:entrainment_VOTinv:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                  
+entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                         
+partner_type1:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                              
+c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                                     
+partner_type1:entrainment_VOTinv:block1:c_FASQUEL_image_agreement                                                   
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log                              
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement           
+entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                  
+partner_type1:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                       
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_FASQUEL_image_agreement                            
+partner_type1:entrainment_VOTinv:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement                           
+partner_type1:entrainment_VOTinv:c_FASQUEL_concreteness:block1:c_SUBTLEX_frequency_log:c_FASQUEL_image_agreement    
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

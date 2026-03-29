@@ -763,7 +763,7 @@ sink(file = "output_stats/LEALCO-EEG_accuracy_LMM.txt")
 summary(m_acc)
 sink(file = NULL)
 
-save_model_to_html_acc(m_acc@model, 'LEALCO-EEG')
+save_model_to_html_acc(m_acc@model, 3, 'LEALCO-EEG_accuracy_LMM.html')
 ```
 
 Make usual sanity checks for the winning model.
@@ -1095,7 +1095,7 @@ sink(file = "output_stats/LEALCO-EEG_votINV_LMM.txt")
 summary(m_votINV)
 sink(file = NULL)
 
-save_model_to_html_VOTinv(m_votINV@model, 'LEALCO-EEG')
+save_model_to_html(m_votINV@model, 3, 'LEALCO-EEG_votINV_LMM.html')
 ```
 
 Make model sanity checks. Everything seems ok.
@@ -1421,6 +1421,8 @@ summary(m_P200)
 sink(file = "output_stats/LEALCO-EEG_P200_LMM.txt")
 summary(m_P200)
 sink(file = NULL)
+
+save_model_to_html(m_P200@model, 3, 'LEALCO-EEG_P200_LMM.html')
 ```
 
 Sanity check
@@ -1884,6 +1886,8 @@ summary(m_P300)
 sink(file = "output_stats/LEALCO-EEG_P300_LMM.txt")
 summary(m_P300)
 sink(file = NULL)
+
+save_model_to_html(m_P300@model, 3, 'LEALCO-EEG_P300_LMM.html')
 ```
 
 Model diagnostics
@@ -2340,6 +2344,8 @@ summary(m_P200_entr_VOTinv)
 sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv.txt")
 summary(m_P200_entr_VOTinv)
 sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOTinv@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOTinv.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_VOTinv
@@ -2475,6 +2481,8 @@ summary(m_P200_entr_VOT)
 sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOT.txt")
 summary(m_P200_entr_VOT)
 sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOT@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOT.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_VOT
@@ -2533,6 +2541,8 @@ summary(m_P200_entr_acc)
 sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_acc.txt")
 summary(m_P200_entr_acc)
 sink(file = NULL)
+
+save_model_to_html(m_P200_entr_acc@model, 3, "LEALCO-EEG_P200entrainment_LMM_acc.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_ACC
@@ -2626,6 +2636,8 @@ summary(m_P300_entr_VOTinv)
 sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_entrVOTinv.txt")
 summary(m_P300_entr_VOTinv)
 sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOTinv@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOTinv.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_VOTinv
@@ -2717,6 +2729,8 @@ summary(m_P300_entr_VOT)
 sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_VOT.txt")
 summary(m_P300_entr_VOT)
 sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOT@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOT.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_VOT
@@ -2773,6 +2787,8 @@ summary(m_P300_entr_acc)
 sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_acc.txt")
 summary(m_P300_entr_acc)
 sink(file = NULL)
+
+save_model_to_html(m_P300_entr_acc@model, 3, "LEALCO-EEG_P300entrainment_LMM_acc.html")
 ```
 
 ##### \>Follow-up: Patner Type x entrainment_ACC
