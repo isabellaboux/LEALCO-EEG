@@ -33,6 +33,7 @@ library(sjPlot)
 library(factoextra)
 library(chron)
 library(cocor)
+source("R/utils.R")
 ```
 
 # Set some custom settings
@@ -762,6 +763,7 @@ sink(file = "output_stats/LEALCO-EEG_accuracy_LMM.txt")
 summary(m_acc)
 sink(file = NULL)
 
+save_model_to_html_acc(m_acc@model, 'LEALCO-EEG')
 ```
 
 Make usual sanity checks for the winning model.
@@ -1092,6 +1094,8 @@ summary(m_votINV)
 sink(file = "output_stats/LEALCO-EEG_votINV_LMM.txt")
 summary(m_votINV)
 sink(file = NULL)
+
+save_model_to_html_VOTinv(m_votINV@model, 'LEALCO-EEG')
 ```
 
 Make model sanity checks. Everything seems ok.
