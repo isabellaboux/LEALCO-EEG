@@ -763,7 +763,7 @@ sink(file = "output_stats/LEALCO-EEG_accuracy_LMM.txt")
 summary(m_acc)
 sink(file = NULL)
 
-save_model_to_html_acc(m_acc@model, 3, 'LEALCO-EEG_accuracy_LMM.html')
+save_model_to_html(m_acc@model, 3, 'LEALCO-EEG_accuracy_LMM.html')
 ```
 
 Make usual sanity checks for the winning model.

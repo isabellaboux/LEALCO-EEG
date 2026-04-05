@@ -1,73 +1,9 @@
-save_model_to_html_acc <- function(model, decimals, filename) {
-  
-  # ---- label dictionary ----
-  var_labels <- c(
-    correct = "Label Maintenance",
-    partner_type = "Partner Type",
-    block = "Block",
-    c_SUBTLEX_frequency_log = "Frequency (log)",
-    c_FASQUEL_image_agreement = "Image Agreement",
-    c_FASQUEL_concreteness = "Concreteness"
-  )
-  
-  # ---- file name ----
-  file <- paste0("output_stats/", filename)
-  
-  # ---- DV label ----
-  dv_name <- as.character(formula(model)[[2]])
-  dv_label <- var_labels[dv_name]
-  if (is.na(dv_label)) dv_label <- dv_name
-  
-  # ---- fixed effects ----
-  fe_names <- names(lme4::fixef(model))
-  
-  # ---- relabel + strip suffix ----
-  relabel_component <- function(x) {
-    if (x == "(Intercept)") return(x)
-    
-    keys <- names(var_labels)[order(nchar(names(var_labels)), decreasing = TRUE)]
-    
-    for (k in keys) {
-      if (startsWith(x, k)) {
-        label <- var_labels[k]
-        if (is.na(label)) label <- k
-        return(label)
-      }
-    }
-    x
-  }
-  
-  # ---- build interaction labels ----
-  relabel_term <- function(term) {
-    if (term == "(Intercept)") return("(Intercept)")
-    
-    parts <- strsplit(term, ":", fixed = TRUE)[[1]]
-    parts <- vapply(parts, relabel_component, character(1))
-    paste(parts, collapse = " × ")
-  }
-  
-  pred_labels <- vapply(fe_names, relabel_term, character(1))
-  
-  # ---- create table ----
-  sjPlot::tab_model(
-    model,
-    file = file,
-    show.ci = FALSE,
-    show.se = TRUE,
-    string.est = "b",
-    string.se = "SE",
-    dv.labels = dv_label,
-    pred.labels = pred_labels,
-    digits = decimals,
-    digits.re = decimals
-  )
-}
-
 save_model_to_html <- function(model, decimals, filename) {
   
   # ---- label dictionary ----
   var_labels <- c(
-    VOTinv = "Naming Latencies (inverted)",
+    correct = "Label Maintenance",
+    VOTinv = "Naming Latency (inverted)",
     partner_type = "Partner Type",
     block = "Block",
     c_SUBTLEX_frequency_log = "Frequency (log)",
@@ -75,7 +11,11 @@ save_model_to_html <- function(model, decimals, filename) {
     c_FASQUEL_concreteness = "Concreteness",
     entrainment_VOTinv = 'Partner-specific Latency Difference (inverted)',
     entrainment_VOT = 'Partner-specific Latency Difference',
-    c_entrainment_ACC = 'Partner specific Label Advantage '
+    c_entrainment_ACC = 'Partner specific Label Advantage ',
+    test_partner = 'Test Partner',
+    c_norm = 'Naming Norms',
+    training_order = 'Training Order',
+    produced_label = 'Produced Label'
   )
   
   # ---- file name (prefix) ----
@@ -122,7 +62,7 @@ save_model_to_html <- function(model, decimals, filename) {
     file = file,
     show.ci = FALSE,
     show.se = TRUE,
-    string.est = "β",
+    string.est = "b",
     string.se = "SE",
     dv.labels = dv_label,
     pred.labels = pred_labels,
