@@ -443,6 +443,40 @@ exclusion_eeg <- c('101', '103', '107', '115', '119', '121', '129', '144', '150'
 
 ```
 
+## TRIAL OVERVIEW
+
+Here, we generate some summary statistic about trial classification (after remoing outliers).
+
+```{r}
+
+# select data (only on test items, but before filtering for invalid trials)
+data_overview <- data %>%
+  filter(class == 'test item') 
+data_overview$error <- as_factor(data_overview$error)
+#data_overview$error <- droplevels(data_overview$error)
+
+# aggregte (within subject)
+overview_wSubj <- data_overview %>%
+  filter(!subjID %in% exclusion_acc) %>%
+  group_by(subjID, error) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  complete(error, fill = list(n = 0)) %>%
+  group_by(subjID) %>%
+  mutate(
+    perc = n / sum(n) * 100
+  ) %>%
+  ungroup()
+
+# aggregte (between subject)
+overview_bSubj <- overview_wSubj %>%
+  group_by(error) %>%
+  summarise(count_mean = mean(n), count_sd = sd(n), perc_mean = mean(perc), perc_sd = sd(perc))
+
+# save
+write.csv(overview_bSubj, "output_stats/LEALCO-EEG_trial_overview.csv")
+
+```
+
 ## SAMPLE STATS
 
 Calculate LQ.
