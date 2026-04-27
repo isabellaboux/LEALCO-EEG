@@ -459,7 +459,7 @@ data_overview$error <- as_factor(data_overview$error)
 overview_wSubj <- data_overview %>%
   filter(!subjID %in% exclusion_acc) %>%
   group_by(subjID, error) %>%
-  summarise(n = n(), .groups = "drop") %>%
+  summarise(n = n()) %>%
   complete(error, fill = list(n = 0)) %>%
   group_by(subjID) %>%
   mutate(
