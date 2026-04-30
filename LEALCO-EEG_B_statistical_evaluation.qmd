@@ -1108,7 +1108,7 @@ votINV <- votINV %>%
 votINV <- votINV %>%
   mutate(team = team - mean(team, na.rm=TRUE))
 
-
+votINV$VOTinv_fact <- votINV$VOTinv * 10000
 ```
 
 Try to find the maximally convergent model by using the *buildmer()* approach.
@@ -1116,13 +1116,14 @@ Try to find the maximally convergent model by using the *buildmer()* approach.
 ```{r}
 
 # indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
-f <- VOTinv ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
+f <- VOTinv_fact ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
      (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness | subjID) +
      (partner_type*block | target_label)
 
 # select the maximal model that still converges
 m_votINV <- buildmer(f,data=votINV,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
 summary(m_votINV)
+
 
 # save winning model
 sink(file = "output_stats/LEALCO-EEG_votINV_LMM.txt")
