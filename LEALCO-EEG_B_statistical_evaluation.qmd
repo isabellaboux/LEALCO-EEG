@@ -2239,7 +2239,7 @@ s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
   ylim(-0.5, 0.5) + 
   geom_text(x=1.5, y=-0.4, label=txt) +
   xlab('Partner-Specific Naming Latency\n(same vs. different)') +
-  ylab('Partner-Specific Lablel Maintenance\n(same vs. different)') +
+  ylab('Partner-Specific Label Maintenance\n(same vs. different)') +
   theme(axis.text=element_text(size=12), axis.title=element_text(size=12)) 
 s
 ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, height=3.5)
