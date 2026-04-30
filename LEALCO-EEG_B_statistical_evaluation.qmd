@@ -2423,7 +2423,7 @@ p1 <- ggplot(P200_marginalMeans$data, aes(x=entrainment_VOTinv, y=yvar, color=pa
   scale_fill_manual(values = pal1) +
   scale_color_manual(values = pal1) +
   #facet_grid(cols = "PC1") +
-  labs(y="P200 (\u00b5V)", x="Entrainment NL") +
+  labs(y="P200 (\u00b5V)", x="Part.-Spec. Naming Latency") +
   ylim(-4, 14) +
   xlim(-3, 3) +
   geom_hline(yintercept=0, linetype=3) +
@@ -2713,7 +2713,7 @@ p1 <- ggplot(P300_marginalMeans$data, aes(x=entrainment_VOTinv, y=yvar, color=pa
   scale_fill_manual(values = pal1) +
   scale_color_manual(values = pal1) +
   #facet_grid(cols = "PC1") +
-  labs(y="P300 (\u00b5V)", x="Entrainment NL") +
+  labs(y="P300 (\u00b5V)", x="Part.-Spec. Naming Latency") +
   ylim(-4, 14) +
   xlim(-3, 3) +
   geom_hline(yintercept=0, linetype=3) +
