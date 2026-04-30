@@ -2216,6 +2216,19 @@ entrainment_data <- entrainment_data %>%
 entrainment_data$entrainment_ACC <- entrainment_data$mean_ACC_same - entrainment_data$mean_ACC_different
 entrainment_data$entrainment_VOTinv <- (entrainment_data$mean_VOTinv_same - entrainment_data$mean_VOTinv_different) * 10000
 
+# correlation
+corr <- cor.test(entrainment_data$entrainment_ACC, entrainment_data$entrainment_VOTinv)
+sink('output_stats/LEALCO-EEG_entrainment_correlation_invVOT.txt')
+print(corr)
+sink()
+
+# format for plot
+if (corr$p.value < 0.001) {
+  txt <- paste0('R=', round(corr$estimate, digits = 3), "\np<0.001")
+} else {
+  txt <- paste0('R=', round(corr$estimate, digits = 3), "\np=", round(corr$p.value, digits = 3) )
+}
+
 # scatterplot
 s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
   geom_point() +
@@ -2224,17 +2237,14 @@ s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
   geom_vline(xintercept=0, linetype="dotted") +
   xlim(-2.5, 2.5) +
   ylim(-0.5, 0.5) + 
-  xlab('Entrainment NL\n(same vs. different)') +
-  ylab('Entrainment LM\n(same vs. different)') +
-  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) 
+  geom_text(x=1.5, y=-0.4, label=txt) +
+  xlab('Partner-Specific Naming Latency\n(same vs. different)') +
+  ylab('Partner-Specific Lablel Maintenance\n(same vs. different)') +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12)) 
 s
 ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, height=3.5)
 
-# correlation
-corr <- cor.test(entrainment_data$entrainment_ACC, entrainment_data$entrainment_VOTinv)
-sink('output_stats/LEALCO-EEG_entrainment_correlation_invVOT.txt')
-print(corr)
-sink()
+
 ```
 
 #### Version 2 (with raw VOT)
