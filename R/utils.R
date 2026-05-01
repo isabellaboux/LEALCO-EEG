@@ -3,22 +3,24 @@ save_model_to_html <- function(model, decimals, filename) {
   # ---- label dictionary ----
   var_labels <- c(
     correct = "Label Maintenance",
-    VOTinv = "Naming Latency (inverted)",
-    partner_type = "Partner Type",
+    VOTinv = "Naming Latency (inverted, scaled)",
+    partner_type = "Test Partner",
     block = "Block",
     c_SUBTLEX_frequency_log = "Frequency (log)",
     c_FASQUEL_image_agreement = "Image Agreement",
     c_FASQUEL_concreteness = "Concreteness",
-    entrainment_VOTinv = 'Partner-specific Latency Difference (inverted)',
-    entrainment_VOT = 'Partner-specific Latency Difference',
-    c_entrainment_ACC = 'Partner specific Label Advantage ',
-    test_partner = 'Test Partner',
-    c_norm = 'Naming Norms',
-    training_order = 'Training Order',
-    produced_label = 'Produced Label'
+    entrainment_VOTinv = "Partner-Specific Naming Latency",
+    entrainment_VOT = "Partner-Specific Naming Latency",
+    c_entrainment_ACC = "Partner-Specific Label Maintenance",
+    test_partner = "Test Partner",
+    c_norm = "Naming Agreement",
+    training_order = "Training Order",
+    produced_label = "Produced Label",
+    target_label = "Item",
+    subjID = "Subject"
   )
   
-  # ---- file name (prefix) ----
+  # ---- file name ----
   file <- paste0("output_stats/", filename)
   
   # ---- DV label ----
@@ -26,10 +28,7 @@ save_model_to_html <- function(model, decimals, filename) {
   dv_label <- var_labels[dv_name]
   if (is.na(dv_label)) dv_label <- dv_name
   
-  # ---- fixed effects ----
-  fe_names <- names(lme4::fixef(model))
-  
-  # ---- relabel + strip suffix ----
+  # ---- relabel single model component ----
   relabel_component <- function(x) {
     if (x == "(Intercept)") return(x)
     
@@ -39,13 +38,14 @@ save_model_to_html <- function(model, decimals, filename) {
       if (startsWith(x, k)) {
         label <- var_labels[k]
         if (is.na(label)) label <- k
-        return(label)  # strip suffix
+        return(label)  # strips factor suffix, e.g. test_partner1 -> Test Partner
       }
     }
+    
     x
   }
   
-  # ---- build interaction labels ----
+  # ---- relabel interaction term ----
   relabel_term <- function(term) {
     if (term == "(Intercept)") return("(Intercept)")
     
@@ -54,6 +54,31 @@ save_model_to_html <- function(model, decimals, filename) {
     paste(parts, collapse = " × ")
   }
   
+  # ---- relabel random-effect labels from sjPlot HTML ----
+  relabel_random_effect_label <- function(x) {
+    
+    # Examples from sjPlot:
+    # target_label
+    # target_label.test_partner1
+    # target_label.test_partner1:training_order1
+    
+    if (!grepl(".", x, fixed = TRUE)) {
+      return(relabel_component(x))
+    }
+    
+    dot_pos <- regexpr(".", x, fixed = TRUE)[1]
+    
+    group_part <- substr(x, 1, dot_pos - 1)
+    slope_part <- substr(x, dot_pos + 1, nchar(x))
+    
+    group_label <- relabel_component(group_part)
+    slope_label <- relabel_term(slope_part)
+    
+    paste0(group_label, ":", slope_label)
+  }
+  
+  # ---- fixed effects ----
+  fe_names <- names(lme4::fixef(model))
   pred_labels <- vapply(fe_names, relabel_term, character(1))
   
   # ---- create table ----
@@ -62,6 +87,7 @@ save_model_to_html <- function(model, decimals, filename) {
     file = file,
     show.ci = FALSE,
     show.se = TRUE,
+    transform = NULL,
     string.est = "b",
     string.se = "SE",
     dv.labels = dv_label,
@@ -69,4 +95,39 @@ save_model_to_html <- function(model, decimals, filename) {
     digits = decimals,
     digits.re = decimals
   )
+  
+  # ---- post-process random effects labels in HTML ----
+  html <- readLines(file, warn = FALSE)
+  
+  # Find all <sub>...</sub> labels and relabel their contents
+  sub_pattern <- "<sub>([^<]+)</sub>"
+  matches <- gregexpr(sub_pattern, html, perl = TRUE)
+  
+  for (i in seq_along(html)) {
+    m <- matches[[i]]
+    
+    if (m[1] != -1) {
+      matched_text <- regmatches(html[i], list(m))[[1]]
+      
+      replaced_text <- vapply(
+        matched_text,
+        function(mt) {
+          inner <- sub("^<sub>([^<]+)</sub>$", "\\1", mt, perl = TRUE)
+          inner_new <- relabel_random_effect_label(inner)
+          paste0("<sub>", inner_new, "</sub>")
+        },
+        character(1)
+      )
+      
+      html[i] <- Reduce(
+        function(line, pair) {
+          sub(pair[1], pair[2], line, fixed = TRUE)
+        },
+        Map(c, matched_text, replaced_text),
+        init = html[i]
+      )
+    }
+  }
+  
+  writeLines(html, file)
 }
