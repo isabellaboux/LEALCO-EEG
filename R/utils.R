@@ -21,7 +21,7 @@ save_model_to_html <- function(model, decimals, filename) {
   )
   
   # ---- file name ----
-  file <- paste0("output_stats/", filename)
+  file <- file.path("output_stats", filename)
   
   # ---- DV label ----
   dv_name <- as.character(formula(model)[[2]])
@@ -38,7 +38,7 @@ save_model_to_html <- function(model, decimals, filename) {
       if (startsWith(x, k)) {
         label <- var_labels[k]
         if (is.na(label)) label <- k
-        return(label)  # strips factor suffix, e.g. test_partner1 -> Test Partner
+        return(label)
       }
     }
     
@@ -57,11 +57,6 @@ save_model_to_html <- function(model, decimals, filename) {
   # ---- relabel random-effect labels from sjPlot HTML ----
   relabel_random_effect_label <- function(x) {
     
-    # Examples from sjPlot:
-    # target_label
-    # target_label.test_partner1
-    # target_label.test_partner1:training_order1
-    
     if (!grepl(".", x, fixed = TRUE)) {
       return(relabel_component(x))
     }
@@ -74,7 +69,7 @@ save_model_to_html <- function(model, decimals, filename) {
     group_label <- relabel_component(group_part)
     slope_label <- relabel_term(slope_part)
     
-    paste0(group_label, ":", slope_label)
+    paste0(group_label, ": ", slope_label)
   }
   
   # ---- fixed effects ----
@@ -82,7 +77,7 @@ save_model_to_html <- function(model, decimals, filename) {
   pred_labels <- vapply(fe_names, relabel_term, character(1))
   
   # ---- create table ----
-  sjPlot::tab_model(
+  tab <- sjPlot::tab_model(
     model,
     file = file,
     show.ci = FALSE,
@@ -95,6 +90,13 @@ save_model_to_html <- function(model, decimals, filename) {
     digits = decimals,
     digits.re = decimals
   )
+  
+  print(tab)
+  
+  # ---- check that the file was created ----
+  if (!file.exists(file)) {
+    stop("tab_model() did not create the HTML file: ", file)
+  }
   
   # ---- post-process random effects labels in HTML ----
   html <- readLines(file, warn = FALSE)
