@@ -1,0 +1,2145 @@
+---
+title: "B_merge"
+---
+
+# LEALCO-EEG
+
+# Information
+
+### Goal
+
+Analyse data *from test task.*
+
+### Inputs
+
+The output file is a large .csv table containing the entire data of the file in a long format. It puts together the PsychoPy input files, the demographics, the VOT files as well as the relevant information from the debriefing questionnaire.
+
+# Load packages
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(lme4)
+library(buildmer)
+library(emmeans)
+library(lmerTest)
+library(gridExtra)
+library(sjPlot)
+library(factoextra)
+library(chron)
+library(cocor)
+source("R/utils.R")
+```
+
+# Set some custom settings
+
+```{r}
+theme_set(theme_bw())
+pal1 = c("#F5793A", "#4f5dab")
+```
+
+# Read files
+
+Read files
+
+```{r}
+# ================ read files
+data <- read.csv('data/LEALCO-EEG_test_merged_data_eeg_all.csv')
+demo <- read.csv('data/demographic/data_LEALCO-EEGdem_2025-06-04_12-52.csv',  sep = ";", fileEncoding = "Latin1", check.names = F)
+offsets <- read.csv('data/LEALCO-EEG_test_merged_data_offsets.csv')
+```
+
+Tidy up variables and variable names.
+
+```{r}
+
+# transform some variables
+data$subjID <- as_factor(data$subjID)
+data$partner_order <- as_factor(data$partner_order)
+data$key_trained <- as_factor(data$key_trained)
+data$key_untrained <- as_factor(data$key_untrained)
+data$block <- as_factor(data$block)
+data$partner <- as_factor(data$partner)
+data$class <- as_factor(data$class)
+data$partner_type <- as_factor(data$partner_type)
+data$SUBTLEX_frequency_log_cat <- as_factor(data$SUBTLEX_frequency_log_cat)
+data$error <- as_factor(data$error)
+data$target_label <- as_factor(data$target_label)
+data$Gender <- as_factor(data$Gender)
+data$Händigkeit <- as_factor(data$Händigkeit)
+data$VOT <- as.numeric(data$VOT)
+data$correct <- as.numeric(data$correct)
+
+# reorder some levels
+data$partner_type <- relevel(data$partner_type, "same")
+
+# change name for some variable levels
+demo$Gender[demo$Gender == 1] <- 'male' 
+demo$Gender[demo$Gender == 2] <- 'female' 
+demo$Gender[demo$Gender == 4] <- 'other' 
+demo$Gender[demo$Gender == 5] <- 'no_answer' 
+
+```
+
+For each trial, create new variable containing the perceived quality of teamwork, depending on the current partner (this just takes the correct value from the debriefing questionnaire, depending on which partner the trial took place with)
+
+```{r}
+# 
+data$team  <- ifelse(data$partner == 'A', data$T101, data$T201)
+```
+
+# Preliminary data sanity checks
+
+## (1) Check general error pattern
+
+Here, the general error distribution (regardless of experimental condition) is assessed by subject. This can potentially constitute the basis for data exclusion.
+
+| Code    | Meaning                                     |
+|---------|---------------------------------------------|
+| correct | said exactly what they were expected to say |
+| 1       | compounded                                  |
+| 2       | semantically related                        |
+| 3       | phonologically related                      |
+| 4       | unrelated                                   |
+| 5       | misarticulation                             |
+| 6       | other                                       |
+| 7       | visual                                      |
+| 8       | audio recording error                       |
+| 9       | no response                                 |
+
+: Table 1: Key for interpreting the "Error"" variable
+
+```{r}
+# plot accuracy counts by subject
+pdf("output_figures/LEALCO-EEG_raw screening.pdf")
+p <- ggplot(data, aes(x=error, fill=error)) + 
+  geom_bar() +
+  facet_wrap(~subjID)
+p
+dev.off()
+p
+
+# count how many trials of each type
+data %>% count(error) 
+
+```
+
+## (2) Check general RT pattern
+
+Let's screen for anomalous RTs in the data files, which could have originated from inaccuracies in data reprocessing. It appears that no anomalies are (any longer) present in the data.
+
+```{r}
+
+# overall density plot
+plot(density(data$VOT, na.rm = TRUE))
+
+# zooming into the left part of the histogramm to spot anomalous VOTs (<400 ms), and export them.
+hist(data$VOT, xlim=c(0, 1000), breaks = 1000)
+dummy <- data[data$VOT < 500,]
+write.csv(dummy, 'data/LEALCO-EEG_test_anomalous_RTs.csv', row.names=FALSE, fileEncoding = "UTF-8")
+
+# Look for NA values and export them.
+dummy <- data[is.na(data$VOT),]
+write.csv(dummy, 'data/LEALCO-EEG_test_anomalousNA_RTs.csv', row.names=FALSE, fileEncoding = "UTF-8")
+
+# histogramm fo ronly correct responses
+hist(data$VOT[data$correct == 1], xlim=c(0, 1000), breaks = 1000)
+plot(density(data$VOT[data$correct == 1], na.rm = TRUE))
+```
+
+## (3) Transform non-normal variables
+
+After trying several normalization approaches, it appears that the **inverse** **normalization** is most appropriatel.
+
+```{r}
+
+# plot native VOTs
+hist(data$VOT, breaks=500)
+
+# plot log10 notmalized VOTs
+data$VOTlog10 <- log10(data$VOT)
+hist(data$VOTlog10, breaks=500)
+
+# plot inverse normalized VOTs
+data$VOTinv <- 1/data$VOT
+hist(data$VOTinv[data$correct==1], breaks=500)
+
+# plot square root normalized VOTs
+data$VOTsqrt <- sqrt(data$VOT)
+hist(data$VOTsqrt, breaks=500)
+```
+
+## (4) Are there anomalous subjects?
+
+Calculate descriptive across collapsed conditions. Note that no trials/subjects are excluded.
+
+```{r}
+
+# descritpives of accuracy: within-subjects
+summary_acc_wSubj <- data %>%
+  group_by(subjID) %>%
+  summarise(mean_ACC = mean(correct), sd=sd(correct), sem=(sd(correct)/sqrt((length(correct)))))
+
+# descritpives of accuracy: between-subjects
+summary_acc_bSubj <- summary_acc_wSubj %>%
+  summarise(grand_mean_ACC = mean(mean_ACC), sd=sd(mean_ACC), sem=(sd(mean_ACC)/sqrt((length(mean_ACC)))))
+
+# descritpives of vot: within-subjects
+summary_vot_wSubj <- data %>%
+  filter(correct == 1) %>%
+  group_by(subjID) %>%
+  summarise(mean_VOT = mean(VOT), sd=sd(VOT), sem=(sd(VOT)/sqrt((length(VOT)))))
+
+# descritpives of vot: between-subjects
+summary_vot_bSubj <- summary_vot_wSubj %>%
+  summarise(grand_mean_VOT = mean(mean_VOT), sd=sd(mean_VOT), sem=(sd(mean_VOT)/sqrt((length(mean_VOT)))))
+```
+
+# Subject exclusion
+
+Select trained trials, with a focus on those that are valid, i.e. where no recording error occurred. We therefore exclude all trials coded as: (5) misarticulation, (6) other, (7) visual, (8) audio recording error (9) no response.
+
+```{r}
+data_trained <- data %>%
+  filter(class == 'test item') %>%
+  filter(error %in% c('correct', '1', '2', '3', '4'))
+```
+
+Determine if any subjects need to be excluded based on data distribution for **accuracy** (collapsing all test conditions).
+
+```{r}
+
+# aggregate within subject
+data_trained_sum_wSubj <- data_trained %>%
+  group_by(subjID) %>%
+  summarise(mean = mean(correct), sem=(sd(correct)/sqrt((length(correct)))), sd=sd(correct))
+
+# aggregate between subjects
+data_trained_sum_bSubj <- data_trained_sum_wSubj %>%
+  summarise(grandMean = mean(mean), sem=(sd(mean)/sqrt((length(mean)))), sd=sd(mean))
+
+# calculate SD intervals
+plus2SD = data_trained_sum_bSubj$grandMean + data_trained_sum_bSubj$sd * 2
+minus2SD = data_trained_sum_bSubj$grandMean - data_trained_sum_bSubj$sd * 2
+plus25SD = data_trained_sum_bSubj$grandMean + data_trained_sum_bSubj$sd * 2.5
+minus25SD = data_trained_sum_bSubj$grandMean - data_trained_sum_bSubj$sd * 2.5
+plus3SD = data_trained_sum_bSubj$grandMean + data_trained_sum_bSubj$sd * 3
+minus3SD = data_trained_sum_bSubj$grandMean - data_trained_sum_bSubj$sd * 3
+
+# plot
+pdf("output_figures/LEALCO-EEG_acc_outliers.pdf")
+p <- ggplot(data_trained_sum_wSubj, aes(x=mean)) +
+  geom_dotplot() +
+  geom_density(alpha=.2, fill="black") +
+  geom_vline(aes(xintercept=data_trained_sum_bSubj$grandMean)) +
+  geom_vline(aes(xintercept=plus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus3SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus3SD), linetype="dashed") +
+  annotate("text", x=plus2SD, y=3, label="+2SD", angle = 30) +
+  annotate("text", x=minus2SD, y=3, label="-2SD", angle = 30) +
+  annotate("text", x=plus25SD, y=3, label="+2.5SD", angle = 30) +
+  annotate("text", x=minus25SD, y=3, label="-2.5SD", angle = 30) +
+  annotate("text", x=plus3SD, y=3, label="+3SD", angle = 30) +
+  annotate("text", x=minus3SD, y=3, label="-3SD", angle = 30) +
+  annotate("text", x=data_trained_sum_bSubj$grandMean, y=3, label="mean", angle = 30) +
+  xlim(0,1) +
+ ggtitle("Subject outliers based on accuracy")
+dev.off()
+p
+
+# select outliers on the basis of +/-2.5SD
+data_trained_sum_wSubj[data_trained_sum_wSubj$mean < minus25SD |
+                       data_trained_sum_wSubj$mean > plus25SD, ]
+```
+
+Do same thing with **naming latencies**.
+
+```{r}
+
+# aggregate within subject
+data_trained_sum_wSubj_vot <- data_trained %>%
+  group_by(subjID) %>%
+  summarise(mean = mean(VOT), sem=(sd(VOT)/sqrt((length(VOT)))), sd=sd(VOT))
+
+# aggregate between subjects
+data_trained_sum_bSubj_vot <- data_trained_sum_wSubj_vot %>%
+  summarise(grandMean = mean(mean), sem=(sd(mean)/sqrt((length(mean)))), sd=sd(mean))
+
+# calculate SD intervals
+plus2SD = data_trained_sum_bSubj_vot$grandMean + data_trained_sum_bSubj_vot$sd * 2
+minus2SD = data_trained_sum_bSubj_vot$grandMean - data_trained_sum_bSubj_vot$sd * 2
+plus25SD = data_trained_sum_bSubj_vot$grandMean + data_trained_sum_bSubj_vot$sd * 2.5
+minus25SD = data_trained_sum_bSubj_vot$grandMean - data_trained_sum_bSubj_vot$sd * 2.5
+plus3SD = data_trained_sum_bSubj_vot$grandMean + data_trained_sum_bSubj_vot$sd * 3
+minus3SD = data_trained_sum_bSubj_vot$grandMean - data_trained_sum_bSubj_vot$sd * 3
+
+# plot
+pdf("output_figures/LEALCO-EEG_vot_outliers.pdf")
+p2 <- ggplot(data_trained_sum_wSubj_vot, aes(x=mean)) +
+  geom_dotplot() +
+  geom_density(alpha=.2, fill="black") +
+  geom_vline(aes(xintercept=data_trained_sum_bSubj_vot$grandMean)) +
+  geom_vline(aes(xintercept=plus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus3SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus3SD), linetype="dashed") +
+  annotate("text", x=plus2SD, y=3, label="+2SD", angle = 30) +
+  annotate("text", x=minus2SD, y=3, label="-2SD", angle = 30) +
+  annotate("text", x=plus25SD, y=3, label="+2.5SD", angle = 30) +
+  annotate("text", x=minus25SD, y=3, label="-2.5SD", angle = 30) +
+  annotate("text", x=plus3SD, y=3, label="+3SD", angle = 30) +
+  annotate("text", x=minus3SD, y=3, label="-3SD", angle = 30) +
+  annotate("text", x=data_trained_sum_bSubj_vot$grandMean, y=3, label="mean", angle = 30) +
+  xlim(0,NA) 
+  ggtitle("Subject outliers based on naming latency (native)")
+dev.off()
+p2
+
+# select subjects with daata beyond +/-2.5SDs 
+data_trained_sum_wSubj_vot[data_trained_sum_wSubj_vot$mean < minus25SD |
+                       data_trained_sum_wSubj_vot$mean > plus25SD, ]
+```
+
+Do the same with **inverted naming latencies**.
+
+```{r}
+
+# aggregate within subject
+data_trained_sum_wSubj_votINV <- data_trained %>%
+  group_by(subjID) %>%
+  summarise(mean = mean(VOTinv), sem=(sd(VOTinv)/sqrt((length(VOTinv)))), sd=sd(VOTinv))
+
+# aggregate between subjects
+data_trained_sum_bSubj_votINV <- data_trained_sum_wSubj_votINV %>%
+  summarise(grandMean = mean(mean), sem=(sd(mean)/sqrt((length(mean)))), sd=sd(mean))
+
+# calculate SD intervals
+plus2SD = data_trained_sum_bSubj_votINV$grandMean + data_trained_sum_bSubj_votINV$sd * 2
+minus2SD = data_trained_sum_bSubj_votINV$grandMean - data_trained_sum_bSubj_votINV$sd * 2
+plus25SD = data_trained_sum_bSubj_votINV$grandMean + data_trained_sum_bSubj_votINV$sd * 2.5
+minus25SD = data_trained_sum_bSubj_votINV$grandMean - data_trained_sum_bSubj_votINV$sd * 2.5
+plus3SD = data_trained_sum_bSubj_votINV$grandMean + data_trained_sum_bSubj_votINV$sd * 3
+minus3SD = data_trained_sum_bSubj_votINV$grandMean - data_trained_sum_bSubj_votINV$sd * 3
+
+# plot
+pdf("output_figures/LEALCO-EEG_votINV_outliers.pdf")
+p3 <- ggplot(data_trained_sum_wSubj_votINV, aes(x=mean)) +
+  geom_dotplot() +
+  geom_density(alpha=.2, fill="black") +
+  geom_vline(aes(xintercept=data_trained_sum_bSubj_votINV$grandMean)) +
+  geom_vline(aes(xintercept=plus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus2SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus25SD), linetype="dashed") +
+  geom_vline(aes(xintercept=plus3SD), linetype="dashed") +
+  geom_vline(aes(xintercept=minus3SD), linetype="dashed") +
+  annotate("text", x=plus2SD, y=3, label="+2SD", angle = 30) +
+  annotate("text", x=minus2SD, y=3, label="-2SD", angle = 30) +
+  annotate("text", x=plus25SD, y=3, label="+2.5SD", angle = 30) +
+  annotate("text", x=minus25SD, y=3, label="-2.5SD", angle = 30) +
+  annotate("text", x=plus3SD, y=3, label="+3SD", angle = 30) +
+  annotate("text", x=minus3SD, y=3, label="-3SD", angle = 30) +
+  annotate("text", x=data_trained_sum_bSubj_votINV$grandMean, y=3, label="mean", angle = 30) +
+  ggtitle("Subject outliers based on naming latency (inverted)")
+dev.off()
+p3
+
+# select subjects with daata beyond +/-2.5SDs 
+data_trained_sum_wSubj_votINV[data_trained_sum_wSubj_votINV$mean < minus25SD |
+                       data_trained_sum_wSubj_votINV$mean > plus25SD, ]
+```
+
+Overall, this condition-blind analysis of outliers showed that, for the **accuracy** measure, applying the following threshold results in excluding following subjects:
+
+-   **2 SD:** 103, 144, 150
+
+-   **2.5 SD:** -
+
+-   **3 SD:** -
+
+For the **(native)** **VOT** measure applying the following threshold results in excluding following subjects:
+
+-   **2 SD:** 113, 138, 150
+
+-   **2.5 SD:** 138, 150
+
+-   **3 SD:** 150
+
+For the **(inverted)** **VOT** measure applying the following threshold results in excluding following subjects:
+
+-   **2 SD:** 121, 138, 142, 150
+
+-   **2.5 SD:** 150
+
+-   **3 SD:** -
+
+In addition following subjects are excluded because they did not fulfill inclusion criteria:
+
+-   107, 119, 129, 144
+
+We select the exclusion criteria of +/-2.5SD on accuracy and inverted VOTs resulting in the exclusion of the following subjects.
+
+In addition, subjects
+
+```{r}
+exclusion_acc <- c('107', '119', '129', '144')
+exclusion_vot <- c('107', '119', '129', '144', '150')
+exclusion_eeg <- c('101', '103', '107', '115', '119', '121', '129', '144', '150')
+
+```
+
+# Trial Overview
+
+Here, we generate some summary statistic about trial classification (after removing outliers).
+
+```{r}
+
+# select data (only on test items, but before filtering for invalid trials)
+data_overview <- data %>%
+  filter(class == 'test item') 
+data_overview$error <- as_factor(data_overview$error)
+#data_overview$error <- droplevels(data_overview$error)
+
+# aggregte (within subject)
+overview_wSubj <- data_overview %>%
+  filter(!subjID %in% exclusion_acc) %>%
+  group_by(subjID, error) %>%
+  summarise(n = n()) %>%
+  complete(error, fill = list(n = 0)) %>%
+  group_by(subjID) %>%
+  mutate(
+    perc = n / sum(n) * 100
+  ) %>%
+  ungroup()
+
+# aggregte (between subject)
+overview_bSubj <- overview_wSubj %>%
+  group_by(error) %>%
+  summarise(count_mean = mean(n), count_sd = sd(n), perc_mean = mean(perc), perc_sd = sd(perc))
+
+# save
+write.csv(overview_bSubj, "output_stats/LEALCO-EEG_trial_overview.csv")
+
+```
+
+# Sample Stats
+
+Calculate LQ.
+
+```{r}
+# assign points (+/-) to the questionnaire socres
+LQ <- demo[18:27]
+LQ_left <- LQ
+LQ_right <- LQ
+LQ_left[LQ == 1] = 2
+LQ_left[LQ == 2] = 1
+LQ_left[LQ == 3] = 1
+LQ_left[LQ == 4] = 0
+LQ_left[LQ == 5] = 0
+LQ_right[LQ == 1] = 0
+LQ_right[LQ == 2] = 0
+LQ_right[LQ == 3] = 1
+LQ_right[LQ == 4] = 1
+LQ_right[LQ == 5] = 2
+
+# sum ppoints (+) for left and right
+LQ_left <- LQ_left %>%
+    mutate(points_left = select(., D010_02 :D010_11) %>% rowSums(na.rm = TRUE))
+LQ_right <- LQ_right %>%
+    mutate(points_right = select(., D010_02 :D010_11) %>% rowSums(na.rm = TRUE))
+LQ$points_left <- LQ_left$points_left
+LQ$points_right <- LQ_right$points_right
+
+# calculate LQ
+demo$LQ_total <- (LQ$points_right - LQ$points_left) / (LQ$points_right + LQ$points_left)
+```
+
+Generate summary stats about demographic data for our three samples.
+
+```{r}
+
+# full sample
+sample_full <- acc_wSubj_partner <- demo %>%
+  summarise(age_mean = mean(Alter), age_sd=sd(Alter),
+            LQ_mean = mean(LQ_total), LQ_sd=sd(LQ_total),
+            n=length(D009_01))
+sample_full_sex <- demo %>%
+  group_by(Gender) %>%
+  summarize(n= n()) %>%
+  pivot_wider(names_from=Gender, values_from=n)
+sample_full <- cbind(sample_full, sample_full_sex)
+
+# sample ACC
+sample_ACC <- acc_wSubj_partner <- demo %>%
+  filter(!D009_01  %in%  exclusion_acc) %>%
+  summarise(age_mean = mean(Alter), age_sd=sd(Alter),
+            LQ_mean = mean(LQ_total), LQ_sd=sd(LQ_total),
+            n=length(D009_01))
+sample_ACC_sex <- demo %>%
+  filter(!D009_01  %in%  exclusion_acc) %>%
+  group_by(Gender) %>%
+  summarize(n= n()) %>%
+  pivot_wider(names_from=Gender, values_from=n)
+sample_ACC <- cbind(sample_ACC, sample_ACC_sex)
+
+# sample VOTinv
+sample_VOTinv <- acc_wSubj_partner <- demo %>%
+  filter(!D009_01  %in%  exclusion_vot) %>%
+  summarise(age_mean = mean(Alter), age_sd=sd(Alter),
+            LQ_mean = mean(LQ_total), LQ_sd=sd(LQ_total),
+            n=length(D009_01))
+sample_VOTinv_sex <- demo %>%
+  filter(!D009_01  %in%  exclusion_vot) %>%
+  group_by(Gender) %>%
+  summarize(n= n()) %>%
+  pivot_wider(names_from=Gender, values_from=n)
+sample_VOTinv <- cbind(sample_VOTinv, sample_VOTinv_sex)
+
+# sample EEG
+sample_EEG <- acc_wSubj_partner <- demo %>%
+  filter(!D009_01  %in%  exclusion_eeg) %>%
+  summarise(age_mean = mean(Alter), age_sd=sd(Alter),
+            LQ_mean = mean(LQ_total), LQ_sd=sd(LQ_total),
+            n=length(D009_01))
+sample_EEG_sex <- demo %>%
+  filter(!D009_01  %in%  exclusion_eeg) %>%
+  group_by(Gender) %>%
+  summarize(n= n()) %>%
+  pivot_wider(names_from=Gender, values_from=n)
+sample_EEG <- cbind(sample_EEG, sample_EEG_sex)
+
+# save
+write.csv(sample_full, "output_stats/LEALCO-EEG_demographic_summary_fullsample.csv")
+write.csv(sample_ACC, "output_stats/LEALCO-EEG_demographic_summary_ACCsample.csv")
+write.csv(sample_VOTinv, "output_stats/LEALCO-EEG_demographic_summary_VOTinvsample.csv")
+write.csv(sample_EEG, "output_stats/LEALCO-EEG_demographic_summary_EEGsample.csv")
+```
+
+# == Label Maintenance ==
+
+## Descriptive analysis
+
+### By Subject (partner)
+
+Here we just have a simple look at accuracy, that is we consider correct only those trials where the subject said *exactly* the word they were expected to say.
+
+```{r}
+
+# aggregte (within subject)
+acc_wSubj_partner <- data_trained %>%
+  filter(!subjID %in%  exclusion_acc) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean = mean(correct), sd=sd(correct), sem=(sd(correct)/sqrt((length(correct)))), n=length(correct))
+
+# save
+write.csv(acc_wSubj_partner, "output_stats/LEALCO-EEG_accuracy_withinSubjects_partner.csv", row.names = FALSE)
+
+# plot (within subject)
+pdf("output_figures/LEALCO-EEG_accuracy_withinSubjects_partner_barplot.pdf")
+a <- ggplot(acc_wSubj_partner, aes(y=mean, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+    scale_fill_manual(values = pal1) +
+  labs(y="Precedent maintenance (proportion)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,1) +
+  facet_wrap(~subjID)
+a
+dev.off() 
+a
+```
+
+```{r}
+# aggregte (between subject)
+acc_bSubj_partner <- acc_wSubj_partner %>%
+  group_by(partner_type) %>%
+  summarise(mean_bSubj = mean(mean), sd_bSubj=sd(mean), sem_bSubj=(sd(mean)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(acc_bSubj_partner, "output_stats/LEALCO-EEG_accuracy_betweenSubjects_partner.csv", row.names = FALSE)
+
+# plot (within subject)
+pdf("output_figures/LEALCO-EEG_accuracy_betweenSubjects_partner_barplot.pdf")
+c <- ggplot(acc_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  scale_fill_manual(values = pal1) +
+  labs(y="Precedent maintenance (proportion)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,1)
+c
+dev.off()
+c
+
+# make other more transparent plot
+pdf("output_figures/LEALCO-EEG_accuracy_betweenSubjects_partner_pointplot.pdf")
+zz <- ggplot(acc_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_point(data= acc_wSubj_partner, aes(y=mean, x=partner_type, color=partner_type), stat="identity", position = position_jitter(w = 0.05), size=3) + 
+  scale_colour_manual(values = pal1) +
+    geom_point(stat="identity", color = "black", position=position_dodge(), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Precedent maintenance (proportion)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,1)
+zz
+dev.off()
+zz
+```
+
+### By Subject (partner x block)
+
+Now we do the same procedure, but while also accounting for block
+
+```{r}
+# aggregte (within subject)
+acc_wSubj_partner_block <- data_trained %>%
+  filter(!subjID %in%  exclusion_acc) %>%
+  group_by(subjID, partner_type, block) %>%
+  summarise(mean = mean(correct), sd=sd(correct), sem=(sd(correct)/sqrt((length(correct)))), n=length(correct))
+
+# save
+write.csv(acc_wSubj_partner_block, "output_stats/LEALCO-EEG_accuracy_withinSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (within subject)
+pdf("output_figures/LEALCO-EEG_accuracy_withinSubjects_partner_x_block_barplot.pdf")
+a <- ggplot(acc_wSubj_partner_block, aes(y=mean, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+  labs(y="Precedent maintenance (proportion)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,1) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+# aggregte (between subject)
+acc_bSubj_partner_block <- acc_wSubj_partner_block %>%
+  group_by(partner_type,block) %>%
+  summarise(mean_bSubj = mean(mean), sd_bSubj=sd(mean), sem_bSubj=(sd(mean)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(acc_bSubj_partner_block, "output_stats/LEALCO-EEG_accuracy_betweenSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (within subject)
+pdf("output_figures/LEALCO-EEG_accuracy_betweenSubjects_partner_x_block_barplot.pdf")
+c <- ggplot(acc_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Precedent maintenance (proportion)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,1)
+c
+dev.off()
+c
+
+# more trasparent plot
+pdf("output_figures/LEALCO-EEG_accuracy_betweenSubjects_partner_x_block_pointplot.pdf")
+tt <- ggplot(acc_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_point(data= acc_wSubj_partner_block, aes(y=mean, x=block, color=partner_type), stat="identity", position = position_jitterdodge(jitter.w = 0.05, dodge.width=(.9)), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Precedent maintenance (proportion)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+```
+
+### By Items (partner)
+
+```{r}
+
+# aggregte (within item)
+acc_wItem_partner <- data_trained %>%
+  group_by(target_label, partner_type) %>%
+    summarise(mean = mean(correct), sd=sd(correct), sem=(sd(correct)/sqrt((length(correct)))), n=length(correct))
+
+# save
+write.csv(acc_wItem_partner, "output_stats/LEALCO-EEG_accuracy_withinItems_partner.csv", row.names = FALSE)
+
+# plot (within item)
+pdf("output_figures/LEALCO-EEG_accuracy_withinItems_partner_barplot.pdf")
+a <- ggplot(acc_wItem_partner, aes(y=mean, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+  labs(y="Precedent maintenance (proportion)", x="Partner") +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=16)) +
+  ylim(0,1) +
+  facet_wrap(~target_label)
+a
+dev.off()
+a
+```
+
+## LMM
+
+Prepare the ACC data for LMMs.
+
+```{r}
+# for each trial, cretae new variable containing the perceived quality of teamwork, dependin gon the current partner (this just takes the correct value from the debfirefing questionnaire, depending on which partner the trial took place with)
+data_trained$team  <- ifelse(data_trained$partner == 'A', data_trained$T101, data_trained$T201)
+
+# select data
+acc <- data_trained %>%
+  filter(!subjID %in%  exclusion_acc)
+
+# Set sum contrasts for all variables.
+acc$partner_type <- droplevels(acc$partner_type)
+contrasts(acc$partner_type) <- contr.sum(2)
+contrasts(acc$block)  <- contr.sum(2)
+
+# check contrasts
+contrasts(acc$partner_type)
+contrasts(acc$block)
+
+# center covariates
+acc <- acc %>%
+  mutate(c_SUBTLEX_frequency_log = SUBTLEX_frequency_log - mean(SUBTLEX_frequency_log, na.rm=TRUE))
+
+acc <- acc %>%
+  mutate(c_FASQUEL_concreteness = FASQUEL_concreteness - mean(FASQUEL_concreteness, na.rm=TRUE))
+
+acc <- acc %>%
+  mutate(c_FASQUEL_image_agreement = FASQUEL_image_agreement - mean(FASQUEL_image_agreement, na.rm=TRUE))
+
+acc <- acc %>%
+  mutate(c_offset = offset - mean(offset, na.rm=TRUE))
+
+acc <- acc %>%
+  mutate(team = team - mean(team, na.rm=TRUE))
+```
+
+Try to find the maximally convergent model by using the *buildmer()* approach.
+
+**/!\\ MIGHT TAKE \>1h TO RUN /!\\**
+
+```{r}
+# indicate the maximal effect srucutre (both fixend and rendom) that is motivated based on design & hypotheses
+f <- correct ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness | subjID) +
+     (partner_type*block | target_label)
+
+# select the maximal model that still converges
+m_acc <- buildmer(f,family=binomial, data=acc,buildmerControl=buildmerControl(direction='order',
+          args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_acc)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_accuracy_LMM.txt")
+summary(m_acc)
+sink(file = NULL)
+
+save_model_to_html(m_acc@model, 3, 'LEALCO-EEG_accuracy_LMM.html')
+```
+
+Make usual sanity checks for the winning model.
+
+```{r}
+# qqplot
+pdf("output_figures/LEALCO-EEG_acc_lmm_qqplot.pdf")
+qqnorm(residuals(m_acc))
+dev.off()
+
+# histogram
+pdf("output_figures/LEALCO-EEG_acc_lmm_hist.pdf")
+hist(residuals(m_acc))
+dev.off()
+
+# standardized residuals
+pdf("output_figures/LEALCO-EEG_acc_lmm_residuals.pdf")
+plot(residuals(m_acc))
+dev.off()
+```
+
+#### \>Post-hoc / maginal means (Block)
+
+```{r}
+# make post-hoc with no correction
+m_acc.emm_none_block <-emmeans(m_acc@model, pairwise ~ block, adjust = "none")
+m_acc.ph_none_block <- as.data.frame(m_acc.emm_none_block$contrasts)
+write.csv(m_acc.ph_none_block,"output_stats/LEALCO-EEG_acc_ph_none_block.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_acc.mm_block <- as.data.frame(m_acc.emm_none_block$emmeans)
+m_acc.mm_block$emmean_untrans <- plogis(m_acc.mm_block$emmean)
+m_acc.mm_block$asymp.LCL_untrans <- plogis(m_acc.mm_block$asymp.LCL)
+m_acc.mm_block$asymp.UCL_untrans <- plogis(m_acc.mm_block$asymp.UCL)
+
+# save them
+write.csv(m_acc.mm_block,"output_stats/LEALCO-EEG_acc_lmm_marginal_block.csv", row.names = FALSE)
+
+# visualize marginal means
+pdf("output_figures/LEALCO-EEG_acc_lmm_marginal_block_pointplot.pdf")
+tt <- ggplot(m_acc.mm_block, aes(y=emmean_untrans*100, x=block)) + 
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans*100, ymax=asymp.UCL_untrans*100), width=.2, position=position_dodge(.9)) +
+  labs(y="Label Maintenance (%)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,100)
+tt
+dev.off()
+tt
+```
+
+#### \>Post-hoc / maginal means (Partner Type)
+
+This follow up is done only for comparability with the previous LEALCO-BEH study.
+
+```{r}
+# make post-hoc with tukey correction
+m_acc.emm_tukey_partner <-emmeans(m_acc@model, pairwise ~ partner_type, adjust = "Tukey")
+m_acc.ph_tukey_partner <- as.data.frame(m_acc.emm_tukey_partner$contrasts)
+write.csv(m_acc.ph_tukey_partner,"output_stats/LEALCO-EEG_acc_ph_tukey_partner.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_acc.emm_none_partner <-emmeans(m_acc@model, pairwise ~ partner_type, adjust = "none")
+m_acc.ph_none_partner <- as.data.frame(m_acc.emm_none_partner$contrasts)
+write.csv(m_acc.ph_none_partner,"output_stats/LEALCO-EEG_acc_ph_none_partner.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_acc.mm_partner <- as.data.frame(m_acc.emm_none_partner$emmeans)
+m_acc.mm_partner$emmean_untrans <- plogis(m_acc.mm_partner$emmean)
+m_acc.mm_partner$asymp.LCL_untrans <- plogis(m_acc.mm_partner$asymp.LCL)
+m_acc.mm_partner$asymp.UCL_untrans <- plogis(m_acc.mm_partner$asymp.UCL)
+
+# save them
+write.csv(m_acc.mm_partner,"output_stats/LEALCO-EEG_acc_lmm_marginal_partner.csv", row.names = FALSE)
+
+# visualize marginal means
+tt <- ggplot(m_acc.mm_partner, aes(y=emmean_untrans*100, x=partner_type, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans*100, ymax=asymp.UCL_untrans*100), width=.2, position=position_dodge(.9)) +
+  labs(y="Label Maintenance (%)", x="Partner") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,100)
+tt
+ggsave("output_figures/LEALCO-EEG_acc_lmm_marginal_partner_pointplot.pdf", width=4
+       , height=3.5)
+```
+
+#### \>Post-hoc / maginal means (Partner Type x Image Agreement x Concreteness)
+
+This is a complex interaction involving a factor and to continuous predictors. We here plot the accuracy level predicted for:
+
+-   concreteness: at min, Q1, Q2, Q3, max
+
+-   image agreement: at all possible values
+
+-   partner type: at both levels (same,different)
+
+```{r}
+pdf("output_figures/LEALCO-EEG_acc_lmm_marginal_partner_x_imageagreement_x_concreteness_pointplot.pdf")
+b <- plot_model(m_acc,
+                type = "pred",
+                terms = c("c_FASQUEL_image_agreement [all]","partner_type" ,"c_FASQUEL_concreteness [quart]"), colors = pal1, mdrt.values = c("quart"), se=TRUE)
+b
+dev.off()
+b
+```
+
+# == Naming Latencies (at correct trials) ==
+
+## Desciptive analysis
+
+### By Subject (native, partner)
+
+Here we just have a simple look at naming latencies, while considering only trials that are correct. In a first moment, we just examine naming latencies in their native format, that is without any type of normalization for approximating normality. Note that the data is right-skewed, expected for latency data.
+
+```{r}
+# aggregte (within subject)
+vot_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean = mean(VOT), sd=sd(VOT), sem=(sd(VOT)/sqrt((length(VOT)))), n=length(VOT))
+
+# save
+write.csv(vot_wSubj_partner, "output_stats/LEALCO-EEG_vot_withinSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_vot_withinSubjects_partner_barplot.pdf")
+a <- ggplot(vot_wSubj_partner, aes(y=mean, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Partner") +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=16)) +
+  #ylim(0,1) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+
+# aggregate (between subject)
+vot_bSubj_partner <- vot_wSubj_partner %>%
+  group_by(partner_type) %>%
+  summarise(mean_bSubj = mean(mean), sd_bSubj=sd(mean), sem_bSubj=(sd(mean)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(vot_bSubj_partner, "output_stats/LEALCO-EEG_vot_betweenSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_vot_betweenSubjects_partner_barplot.pdf")
+c <- ggplot(vot_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16))
+c
+dev.off()
+c
+
+# plot (raincloud)
+pdf("output_figures/LEALCO-EEG_vot_betweenSubjects_partner_pointplot.pdf")
+tt <- ggplot(vot_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_point(data= vot_wSubj_partner, aes(y=mean, x=partner_type, color=partner_type), stat="identity", position = position_jitter(w = 0.05), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+```
+
+### By Subjects (native, partner x block)
+
+Now we do the same procedure, but while also accounting for block.
+
+```{r}
+# aggregte (within subject)
+vot_wSubj_partner_block <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot) %>%
+  group_by(subjID, partner_type, block) %>%
+    summarise(mean = mean(VOT), sd=sd(VOT), sem=(sd(VOT)/sqrt((length(VOT)))), n=length(VOT))
+
+# save
+write.csv(vot_wSubj_partner_block, "output_stats/LEALCO-EEG_vot_withinSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_vot_withinSubjects_partner_x_block_barplot.pdf")
+a <- ggplot(vot_wSubj_partner_block, aes(y=mean, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+      labs(y="Naming latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+
+# aggregte (between subject)
+vot_bSubj_partner_block <- vot_wSubj_partner_block %>%
+  group_by(partner_type,block) %>%
+    summarise(mean_bSubj = mean(mean), sd_bSubj=sd(mean), sem_bSubj=(sd(mean)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(vot_bSubj_partner_block, "output_stats/LEALCO-EEG_vot_betweenSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_vot_betweenSubjects_partner_x_block_barplot.pdf")
+c <- ggplot(vot_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+    labs(y="Naming latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+c
+dev.off()
+c
+
+# plot (pointplot)
+pdf("output_figures/LEALCO-EEG_vot_betweenSubjects_partner_x_block_pointplot.pdf")
+tt <- ggplot(vot_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_point(data= vot_wSubj_partner_block, aes(y=mean, x=block, color=partner_type), stat="identity", position = position_jitterdodge(jitter.w = 0.05, dodge.width=(.9)), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+```
+
+## LMM
+
+Prepare the VOT data for LMMs. Note that we will be running he model on inverted naming latency (1/naming latency). This results in the magnitude of the datapoints being inverted. The estimates of the models have to be read accordingly.
+
+```{r}
+
+# select data
+votINV <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot)
+
+# Set sum contrasts for all variables.
+votINV$partner_type <- droplevels(votINV$partner_type)
+contrasts(votINV$partner_type) <- contr.sum(2)
+contrasts(votINV$block)  <- contr.sum(2)
+
+# check contrasts
+contrasts(votINV$partner_type)
+contrasts(votINV$block)
+
+# center covariates
+votINV <- votINV %>%
+  mutate(c_SUBTLEX_frequency_log = SUBTLEX_frequency_log - mean(SUBTLEX_frequency_log, na.rm=TRUE))
+
+votINV <- votINV %>%
+  mutate(c_FASQUEL_concreteness = FASQUEL_concreteness - mean(FASQUEL_concreteness, na.rm=TRUE))
+
+votINV <- votINV %>%
+  mutate(c_FASQUEL_image_agreement = FASQUEL_image_agreement - mean(FASQUEL_image_agreement, na.rm=TRUE))
+
+votINV <- votINV %>%
+  mutate(c_offset = offset - mean(offset, na.rm=TRUE))
+
+votINV <- votINV %>%
+  mutate(team = team - mean(team, na.rm=TRUE))
+
+votINV$VOTinv_fact <- votINV$VOTinv * 10000
+```
+
+Try to find the maximally convergent model by using the *buildmer()* approach.
+
+```{r}
+
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- VOTinv_fact ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness | subjID) +
+     (partner_type*block | target_label)
+
+# select the maximal model that still converges
+m_votINV <- buildmer(f,data=votINV,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_votINV)
+
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_votINV_LMM.txt")
+summary(m_votINV)
+sink(file = NULL)
+
+save_model_to_html(m_votINV@model, 3, 'LEALCO-EEG_votINV_LMM.html')
+```
+
+Make model sanity checks. Everything seems ok.
+
+```{r}
+# qqplot
+pdf("output_figures/LEALCO-EEG_votINV_lmm_qqplot.pdf")
+qqnorm(residuals(m_votINV))
+dev.off()
+
+# histogram
+pdf("output_figures/LEALCO-EEG_votINV_lmm_hist.pdf")
+hist(residuals(m_votINV))
+dev.off()
+
+# standardized residuals
+pdf("output_figures/LEALCO-EEG_votINV_lmm_residuals.pdf")
+plot(residuals(m_votINV))
+dev.off()
+```
+
+#### \>Post-hoc / marginal-means (Block)
+
+```{r}
+# make post-hoc with no correction
+m_votINV.emm_none_block <-emmeans(m_votINV@model, pairwise ~ block, adjust = "none")
+m_votINV.ph_none_block <- as.data.frame(m_votINV.emm_none_block$contrasts)
+write.csv(m_votINV.ph_none_block,"output_stats/LEALCO-EEG_votINV_ph_none_block.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_votINV.mm_block <- as.data.frame(m_votINV.emm_none_block$emmeans)
+m_votINV.mm_block$emmean_untrans <- 1/m_votINV.mm_block$emmean
+m_votINV.mm_block$asymp.LCL_untrans <- 1/m_votINV.mm_block$asymp.LCL
+m_votINV.mm_block$asymp.UCL_untrans <- 1/m_votINV.mm_block$asymp.UCL
+
+# save them
+write.csv(m_votINV.mm_block,"output_stats/LEALCO-EEG_votINV_lmm_marginal_block.csv", row.names = FALSE)
+
+# visualize marginal means
+tt <- ggplot(m_votINV.mm_block, aes(y=emmean_untrans, x=block)) + 
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans, ymax=asymp.UCL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming Latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_block_pointplot.pdf", width=4 , height=3.5)
+```
+
+#### \>Post-hoc / marginal-means (Partner Type)
+
+```{r}
+# make post-hoc with no correction (partner)
+m_votINV.emm_none_partner <-emmeans(m_votINV@model, pairwise ~ partner_type, adjust = "none")
+m_votINV.ph_none_partner <- as.data.frame(m_votINV.emm_none_partner$contrasts)
+write.csv(m_votINV.ph_none_partner,"output_stats/LEALCO-EEG_votINV_ph_none_partner.csv", row.names = FALSE)
+
+# extract and save marginal means (partner)
+m_votINV.mm_partner <- as.data.frame(m_votINV.emm_none_partner$emmeans)
+m_votINV.mm_partner$emmean_untrans <- 1/m_votINV.mm_partner$emmean
+m_votINV.mm_partner$lower.CL_untrans <- 1/m_votINV.mm_partner$asymp.UCL
+m_votINV.mm_partner$upper.CL_untrans <- 1/m_votINV.mm_partner$asymp.LCL
+write.csv(m_votINV.mm_partner,"output_stats/LEALCO-EEG_votINV_lmm_marginal_partner.csv", row.names = FALSE)
+
+tt <- ggplot(m_votINV.mm_partner, aes(y=emmean_untrans, x=partner_type, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=lower.CL_untrans, ymax=upper.CL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Partner Type") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_partner_pointplot.pdf", width=4 , height=3.5)
+```
+
+#### \>Post-hoc / marginal-means (Partner Type x Block)
+
+```{r}
+
+# make post-hoc with tukey correction
+m_votINV.emm_tukey_partner_x_block <-emmeans(m_votINV@model, pairwise ~ partner_type * block, adjust = "tukey")
+m_votINV.ph_tukey_partner_x_block <- as.data.frame(m_votINV.emm_tukey_partner_x_block$contrasts)
+write.csv(m_votINV.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_votINV_ph_tukey_partner_x_block.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_votINV.emm_none_partner_x_block <-emmeans(m_votINV@model, pairwise ~ partner_type * block, adjust = "none")
+m_votINV.ph_none_partner_x_block <- as.data.frame(m_votINV.emm_none_partner_x_block$contrasts)
+m_votINV.ph_none_partner_x_block$p.valueBonf2 = m_votINV.ph_none_partner_x_block$p.value *2
+write.csv(m_votINV.ph_none_partner_x_block,"output_stats/LEALCO-EEG_votINV_ph_none_partner_x_block.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_votINV.mm_partner_x_block <- as.data.frame(m_votINV.emm_tukey_partner_x_block$emmeans)
+m_votINV.mm_partner_x_block$emmean_untrans <- 1/m_votINV.mm_partner_x_block$emmean
+m_votINV.mm_partner_x_block$lower.CL_untrans <- 1/m_votINV.mm_partner_x_block$asymp.UCL
+m_votINV.mm_partner_x_block$upper.CL_untrans <- 1/m_votINV.mm_partner_x_block$asymp.LCL
+write.csv(m_votINV.mm_partner_x_block,"output_stats/LEALCO-EEG_votINV_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+
+# plot
+tt <- ggplot(m_votINV.mm_partner_x_block, aes(y=emmean_untrans, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=lower.CL_untrans, ymax=upper.CL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming Latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_partner_x_block_pointplot.pdf", width=4 , height=3.5)
+```
+
+# == P200 (at correct trials) ==
+
+## Descriptive analysis
+
+### By Subject (native, partner)
+
+Here we just have a simple look at P200, while considering only trials that are correct.
+
+```{r}
+# aggregte (within subject)
+P200_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean = mean(P200, na.rm=TRUE), sd=sd(P200, na.rm=TRUE), sem=(sd(P200, na.rm=TRUE)/sqrt((length(P200)))), n=length(P200))
+
+# save
+write.csv(P200_wSubj_partner, "output_stats/LEALCO-EEG_P200_withinSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_p200_withinSubjects_partner_barplot.pdf")
+a <- ggplot(P200_wSubj_partner, aes(y=mean, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=16)) +
+  #ylim(0,1) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+
+# aggregate (between subject)
+P200_bSubj_partner <- P200_wSubj_partner %>%
+  group_by(partner_type) %>%
+  summarise(mean_bSubj = mean(mean ,na.rm=TRUE), sd_bSubj=sd(mean ,na.rm=TRUE), sem_bSubj=(sd(mean, na.rm=TRUE)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(P200_bSubj_partner, "output_stats/LEALCO-EEG_p200_betweenSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_p200_betweenSubjects_partner_barplot.pdf")
+c <- ggplot(P200_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16))
+c
+dev.off()
+c
+
+# plot (raincloud)
+pdf("output_figures/LEALCO-EEG_P200_betweenSubjects_partner_pointplot.pdf")
+tt <- ggplot(P200_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_point(data= P200_wSubj_partner, aes(y=mean, x=partner_type, color=partner_type), stat="identity", position = position_jitter(w = 0.05), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+
+```
+
+### By Subjects (native, partner x block)
+
+Now we do the same procedure, but while also accounting for block.
+
+```{r}
+# aggregte (within subject)
+P200_wSubj_partner_block <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg) %>%
+  group_by(subjID, partner_type, block) %>%
+    summarise(mean = mean(P200, na.rm=TRUE), sd=sd(P200, na.rm=TRUE), sem=(sd(P200, na.rm=TRUE)/sqrt((length(P200)))), n=length(P200))
+
+# save
+write.csv(P200_wSubj_partner_block, "output_stats/LEALCO-EEG_P200_withinSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P200_withinSubjects_partner_x_block_barplot.pdf")
+a <- ggplot(P200_wSubj_partner_block, aes(y=mean, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+      labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+# aggregte (between subject)
+P200_bSubj_partner_block <- P200_wSubj_partner_block %>%
+  group_by(partner_type,block) %>%
+    summarise(mean_bSubj = mean(mean, na.rm=TRUE), sd_bSubj=sd(mean, na.rm=TRUE), sem_bSubj=(sd(mean, na.rm=TRUE)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(P200_bSubj_partner_block, "output_stats/LEALCO-EEG_P200_betweenSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P200_betweenSubjects_partner_x_block_barplot.pdf")
+c <- ggplot(P200_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+    labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+c
+dev.off()
+c
+
+# plot (pointplot)
+pdf("output_figures/LEALCO-EEG_P200_betweenSubjects_partner_x_block_pointplot.pdf")
+tt <- ggplot(P200_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_point(data= P200_wSubj_partner_block, aes(y=mean, x=block, color=partner_type), stat="identity", position = position_jitterdodge(jitter.w = 0.05, dodge.width=(.9)), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+```
+
+## LMM
+
+Prepare the P200 data for LMMs.
+
+```{r}
+
+# select data
+P200 <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg)
+
+# Set sum contrasts for all variables.
+P200$partner_type <- droplevels(P200$partner_type)
+contrasts(P200$partner_type) <- contr.sum(2)
+contrasts(P200$block)  <- contr.sum(2)
+
+# check contrasts
+contrasts(P200$partner_type)
+contrasts(P200$block)
+
+# center covariates
+P200 <- P200 %>%
+  mutate(c_SUBTLEX_frequency_log = SUBTLEX_frequency_log - mean(SUBTLEX_frequency_log, na.rm=TRUE))
+
+P200 <- P200 %>%
+  mutate(c_FASQUEL_concreteness = FASQUEL_concreteness - mean(FASQUEL_concreteness, na.rm=TRUE))
+
+P200 <- P200 %>%
+  mutate(c_FASQUEL_image_agreement = FASQUEL_image_agreement - mean(FASQUEL_image_agreement, na.rm=TRUE))
+
+P200 <- P200 %>%
+  mutate(c_offset = offset - mean(offset, na.rm=TRUE))
+
+P200 <- P200 %>%
+  mutate(team = team - mean(team, na.rm=TRUE))
+```
+
+Try to find the maximally convergent model by using the *buildmer()* approach.
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness | subjID) +
+     (partner_type*block | target_label)
+
+# select the maximal model that still converges
+m_P200 <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200_LMM.txt")
+summary(m_P200)
+sink(file = NULL)
+
+save_model_to_html(m_P200@model, 3, 'LEALCO-EEG_P200_LMM.html')
+```
+
+Sanity check
+
+```{r}
+# qqplot
+pdf("output_figures/LEALCO-EEG_P200_lmm_qqplot.pdf")
+qqnorm(residuals(m_P200))
+dev.off()
+
+# histogram
+pdf("output_figures/LEALCO-EEG_P200_lmm_hist.pdf")
+hist(residuals(m_P200))
+dev.off()
+
+# standardized residuals
+pdf("output_figures/LEALCO-EEG_P200_lmm_residuals.pdf")
+plot(residuals(m_P200))
+dev.off()
+```
+
+#### \>Post-hoc: Partner x Block (which is n.s.!)
+
+Note that this specific interaction is not significant. However, let's still have a look as a sanity check, to make sure that visually, the effect has the directionality we expect. Calculate emmeans and post-hocs for partner x block.
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+emm_tukey <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "Tukey")
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "none")
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+
+tt <- ggplot(P200_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot.pdf", width = 4, height = 3)
+```
+
+#### \>Post-hoc: Partner x Block x Concreteness
+
+```{r}
+
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none")
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
+                partner_type=c("same","different"),
+                block=c('1', '2')))
+P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness  ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
+
+#P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.csv", row.names = FALSE)
+
+# plot
+pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.pdf")
+b <- ggplot(P200_marginalMeans, aes(x=c_FASQUEL_concreteness, y=yvar, color=partner_type, group=partner_type))+
+  geom_line() + 
+  geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  facet_grid(~ block) + 
+  labs(y="P200 (\u00b5V)", x="Concreteness") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+dev.off()
+b
+```
+
+#### \>Post-hoc: Partner x Block x Concreteness x Image Agreement
+
+```{r}
+
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "Tukey")
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
+                c_FASQUEL_image_agreement=c(min(P200$c_FASQUEL_image_agreement),max(P200$c_FASQUEL_image_agreement)),
+                partner_type=c("same","different"),
+                block=c('1', '2')))
+P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
+
+#P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+
+# plot
+pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.pdf")
+bb <- ggplot(P200_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
+  geom_line() + 
+  geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  facet_grid(c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement) + 
+  labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+dev.off()
+bb
+```
+
+# == P300 (at correct trials) ==
+
+## Descriptive analysis
+
+### By Subject (native, partner)
+
+Here we just have a simple look at P300, while considering only trials that are correct.
+
+```{r}
+# aggregate (within subject)
+P300_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean = mean(P300, na.rm=TRUE), sd=sd(P300, na.rm=TRUE), sem=(sd(P300, na.rm=TRUE)/sqrt((length(P300)))), n=length(P300))
+
+# save
+write.csv(P300_wSubj_partner, "output_stats/LEALCO-EEG_P300_withinSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P300_withinSubjects_partner_barplot.pdf")
+a <- ggplot(P300_wSubj_partner, aes(y=mean, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=8), axis.title=element_text(size=16)) +
+  #ylim(0,1) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+
+# aggregate (between subject)
+P300_bSubj_partner <- P300_wSubj_partner %>%
+  group_by(partner_type) %>%
+  summarise(mean_bSubj = mean(mean ,na.rm=TRUE), sd_bSubj=sd(mean ,na.rm=TRUE), sem_bSubj=(sd(mean, na.rm=TRUE)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(P300_bSubj_partner, "output_stats/LEALCO-EEG_P300_betweenSubjects_partner.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P300_betweenSubjects_partner_barplot.pdf")
+c <- ggplot(P300_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16))
+c
+dev.off()
+c
+
+# plot (raincloud)
+pdf("output_figures/LEALCO-EEG_P300_betweenSubjects_partner_pointplot.pdf")
+tt <- ggplot(P300_bSubj_partner, aes(y=mean_bSubj, x=partner_type, fill=partner_type)) + 
+  geom_point(data= P300_wSubj_partner, aes(y=mean, x=partner_type, color=partner_type), stat="identity", position = position_jitter(w = 0.05), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Partner") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+
+```
+
+### By Subjects (native, partner x block)
+
+Now we do the same procedure, but while also accounting for block.
+
+```{r}
+# aggregte (within subject)
+P300_wSubj_partner_block <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg) %>%
+  group_by(subjID, partner_type, block) %>%
+    summarise(mean = mean(P300, na.rm=TRUE), sd=sd(P300, na.rm=TRUE), sem=(sd(P300, na.rm=TRUE)/sqrt((length(P300)))), n=length(P300))
+
+# save
+write.csv(P300_wSubj_partner_block, "output_stats/LEALCO-EEG_P300_withinSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P300_withinSubjects_partner_x_block_barplot.pdf")
+a <- ggplot(P300_wSubj_partner_block, aes(y=mean, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean-sem, ymax=mean+sem), width=.2,
+                position=position_dodge(.9)) +
+      labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA) +
+  facet_wrap(~subjID)
+a
+dev.off()
+a
+```
+
+```{r}
+# aggregte (between subject)
+P300_bSubj_partner_block <- P300_wSubj_partner_block %>%
+  group_by(partner_type,block) %>%
+    summarise(mean_bSubj = mean(mean, na.rm=TRUE), sd_bSubj=sd(mean, na.rm=TRUE), sem_bSubj=(sd(mean, na.rm=TRUE)/sqrt((length(mean)))), n_bSubj=length(mean))
+
+# save
+write.csv(P300_bSubj_partner_block, "output_stats/LEALCO-EEG_P300_betweenSubjects_partner_x_block.csv", row.names = FALSE)
+
+# plot (barplot)
+pdf("output_figures/LEALCO-EEG_P300_betweenSubjects_partner_x_block_barplot.pdf")
+c <- ggplot(P300_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_bar(stat="identity", color = "black", position=position_dodge()) +
+  scale_fill_manual(values = pal1) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+    labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+c
+dev.off()
+c
+
+# plot (pointplot)
+pdf("output_figures/LEALCO-EEG_P300_betweenSubjects_partner_x_block_pointplot.pdf")
+tt <- ggplot(P300_bSubj_partner_block, aes(y=mean_bSubj, x=block, fill=partner_type)) + 
+  geom_point(data= P300_wSubj_partner_block, aes(y=mean, x=block, color=partner_type), stat="identity", position = position_jitterdodge(jitter.w = 0.05, dodge.width=(.9)), size=3) +
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", color = "black", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=mean_bSubj-sem_bSubj, ymax=mean_bSubj+sem_bSubj), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) +
+  ylim(0,NA)
+tt
+dev.off()
+tt
+```
+
+## LMM
+
+Prepare the P300data for LMMs.
+
+```{r}
+# select data
+P300 <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg)
+
+# change the base level of the Belief and Desire condition to be B+ and D+
+#TOM$conditionB <- relevel(TOM$conditionB,  'B+')  
+#TOM$conditionD <- relevel(TOM$conditionD, 'D+')  
+
+# Set sum contrasts for all variables.
+P300$partner_type <- droplevels(P300$partner_type)
+contrasts(P300$partner_type) <- contr.sum(2)
+contrasts(P300$block)  <- contr.sum(2)
+
+# check contrasts
+contrasts(P300$partner_type)
+contrasts(P300$block)
+
+# center covariates
+P300 <- P300 %>%
+  mutate(c_SUBTLEX_frequency_log = SUBTLEX_frequency_log - mean(SUBTLEX_frequency_log, na.rm=TRUE))
+
+P300 <- P300 %>%
+  mutate(c_FASQUEL_concreteness = FASQUEL_concreteness - mean(FASQUEL_concreteness, na.rm=TRUE))
+
+P300 <- P300 %>%
+  mutate(c_FASQUEL_image_agreement = FASQUEL_image_agreement - mean(FASQUEL_image_agreement, na.rm=TRUE))
+
+P300 <- P300 %>%
+  mutate(c_offset = offset - mean(offset, na.rm=TRUE))
+
+P300 <- P300 %>%
+  mutate(team = team - mean(team, na.rm=TRUE))
+```
+
+Run the model
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness | subjID) +
+     (partner_type*block | target_label)
+
+# select the maximal model that still converges
+m_P300 <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300_LMM.txt")
+summary(m_P300)
+sink(file = NULL)
+
+save_model_to_html(m_P300@model, 3, 'LEALCO-EEG_P300_LMM.html')
+```
+
+Model diagnostics
+
+```{r}
+# qqplot
+pdf("output_figures/LEALCO-EEG_P300_lmm_qqplot.pdf")
+qqnorm(residuals(m_P300))
+dev.off()
+
+# histogram
+pdf("output_figures/LEALCO-EEG_P300_lmm_hist.pdf")
+hist(residuals(m_P300))
+dev.off()
+
+# standardized residuals
+pdf("output_figures/LEALCO-EEG_P300_lmm_residuals.pdf")
+plot(residuals(m_P300))
+dev.off()
+```
+
+### \>Post-hoc: Partner x Block (which is n.s.!)
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+emm_tukey <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "Tukey")
+P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+emm_none <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "none")
+P300_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block.csv", row.names = FALSE)
+```
+
+```{r}
+# extract and save marginal means (partner x block)
+P300_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P300_marginalMeans,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+
+tt <- ggplot(P300_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_pointplot.pdf", width = 4, height = 3)
+```
+
+### \>Post-hoc: Image Agreement x Partner Type x Block x Concreteness x Frequency
+
+```{r}
+
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement * c_SUBTLEX_frequency_log, adjust = "Tukey")
+P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
+P300_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(c_FASQUEL_concreteness=c(min(P300$c_FASQUEL_concreteness),max(P300$c_FASQUEL_concreteness)),
+                c_FASQUEL_image_agreement=c(min(P300$c_FASQUEL_image_agreement),max(P300$c_FASQUEL_image_agreement)),
+                c_SUBTLEX_frequency_log=c(min(P300$c_SUBTLEX_frequency_log),max(P300$c_SUBTLEX_frequency_log)),
+                partner_type=c("same","different"),
+                block=c('1', '2')))
+P300_marginalMeans <- emmip(m_P300@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type ~ c_SUBTLEX_frequency_log, at=mylist,CIs=TRUE, plotit=FALSE)
+
+#P300_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P300_marginalMeans,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+
+# plot
+pdf("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_x_concretness_x_agreement_x_frequency.pdf")
+ggplot(P300_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
+  geom_line() + 
+  geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  facet_grid(c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ c_SUBTLEX_frequency_log) + 
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+dev.off()
+```
+
+# == Entrainment ==
+
+## Quantify entrainment
+
+```{r}
+# aggregate accuracy (within subject)
+acc_wSubj_partner <- data_trained %>%
+  filter(!subjID %in%  exclusion_acc) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean_ACC = mean(correct))
+
+# aggregate VOTinv (within subjects) only for correct trials
+vot_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean_VOT = mean(VOT))
+
+# aggregate VOTinv (within subjects) only for correct trials
+votINV_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_vot) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean_VOTinv = mean(VOTinv))
+
+# aggregate EEG data (within subjects) only for correct trials
+EEG_wSubj_partner <- data_trained %>%
+  filter(correct == 1) %>%
+  filter(!subjID %in%  exclusion_eeg) %>%
+  group_by(subjID, partner_type) %>%
+  summarise(mean_P200 = mean(P200, na.rm=TRUE), mean_P300 = mean(P300, na.rm=TRUE) )
+
+# merge all aggragated DVs
+entrainment_data <- merge(acc_wSubj_partner, vot_wSubj_partner,by=c("subjID","partner_type"))
+entrainment_data <- merge(x = entrainment_data, y = votINV_wSubj_partner, by = c("subjID", "partner_type"), all.x = TRUE)
+entrainment_data <- merge(x = entrainment_data, y = EEG_wSubj_partner, by = c("subjID", "partner_type"), all.x = TRUE)
+
+# pivot from long to wide
+entrainment_data <- entrainment_data %>% 
+  pivot_wider(
+    names_from = partner_type, 
+    values_from = c(mean_ACC, mean_VOT, mean_VOTinv, mean_P200, mean_P300)
+  )
+
+```
+
+```{r}
+
+ # calculate entrainment scores (same - different)
+entrainment_data$entrainment_ACC <- entrainment_data$mean_ACC_same - entrainment_data$mean_ACC_different
+entrainment_data$entrainment_VOTinv <- (entrainment_data$mean_VOTinv_same - entrainment_data$mean_VOTinv_different) * 10000
+
+# correlation
+corr <- cor.test(entrainment_data$entrainment_ACC, entrainment_data$entrainment_VOTinv)
+sink('output_stats/LEALCO-EEG_entrainment_correlation_invVOT.txt')
+print(corr)
+sink()
+
+# format for plot
+if (corr$p.value < 0.001) {
+  txt <- paste0('R=', round(corr$estimate, digits = 3), "\np<0.001")
+} else {
+  txt <- paste0('R=', round(corr$estimate, digits = 3), "\np=", round(corr$p.value, digits = 3) )
+}
+
+# scatterplot
+s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
+  geom_point() +
+  stat_smooth(method=lm, fullrange=TRUE, color = 'black') + 
+  geom_hline(yintercept=0, linetype="dotted") +
+  geom_vline(xintercept=0, linetype="dotted") +
+  xlim(-2.5, 2.5) +
+  ylim(-0.5, 0.5) + 
+  geom_text(x=1.5, y=-0.4, label=txt) +
+  xlab('Partner-Specific Naming Latency\n(same vs. different)') +
+  ylab('Partner-Specific Label Maintenance\n(same vs. different)') +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=12)) 
+s
+ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, height=3.5)
+
+
+```
+
+
+```{r}
+
+# Plot the correlation
+p3<- ggplot(entrainment_data, aes(x=mean_VOTinv_same, y=mean_ACC_same)) +
+     geom_point(color=pal1[1]) +
+     geom_smooth(method=lm , color=pal1[1], se=FALSE) +
+     geom_point(aes(x=mean_VOTinv_different, y=mean_ACC_different), color=pal1[2]) +
+     geom_smooth(aes(x=mean_VOTinv_different, y=mean_ACC_different), method=lm , color=pal1[2], se=FALSE) +
+     xlab('Naming Latencies (inverted)') +
+     ylab('Label Maintenance') 
+ p3
+ ggsave("output_figures/LEALCO-EEG_correlation_behavioral.pdf")
+ 
+# make separate correlations for same and differet
+cor_same <- cor.test(entrainment_data$mean_VOTinv_same, entrainment_data$mean_ACC_same)
+cor_diff <- cor.test(entrainment_data$mean_VOTinv_different, entrainment_data$mean_ACC_different)
+sink('output_stats/LEALCO-EEG_correlation_behavior.txt')
+print(cor_same)
+print(cor_diff)
+sink()
+```
+
+## LMM P200 incl. entrainment_VOTinv
+
+Prepara data for LMM.
+
+```{r}
+# add the PC1 data to the trial-by-trial P200 data
+P200 <- merge(x = P200, y = entrainment_data[c('subjID', 'PC1', 'entrainment_VOTinv', 'entrainment_VOT', 'entrainment_ACC')], by = "subjID", all.x = TRUE)
+
+# center PC1
+P200 <- P200 %>%
+  mutate(c_PC1 = PC1 - mean(PC1, na.rm=TRUE),
+         c_entrainment_VOTinv = entrainment_VOTinv - mean(entrainment_VOTinv, na.rm=TRUE),
+         c_entrainment_VOT = entrainment_VOT - mean(entrainment_VOT, na.rm=TRUE),
+         c_entrainment_ACC = entrainment_ACC - mean(entrainment_ACC, na.rm=TRUE)
+         )
+```
+
+Model.
+
+```{r}
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness * entrainment_VOTinv +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness*entrainment_VOTinv | subjID) +
+     (partner_type*block*entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_VOTinv <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOTinv)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv.txt")
+summary(m_P200_entr_VOTinv)
+sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOTinv@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOTinv.html")
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv), median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(P200_marginalMeans$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+#P200_marginalMeans$data$entrainment_VOTinv <- P200_marginalMeans$data$entrainment_VOTinv - mean(P200$PC1)
+
+# plot 
+p1 <- ggplot(P200_marginalMeans$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  #facet_grid(cols = "PC1") +
+  labs(y="P200 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv.pdf", width=4, height=3)
+```
+
+#### \>Post-hoc: Patner Type x Image Agreement
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_imageagreement.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * c_FASQUEL_image_agreement, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_imageagreement.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(c_FASQUEL_image_agreement=c(min(P200$c_FASQUEL_image_agreement), median(P200$c_FASQUEL_image_agreement), max(P200$c_FASQUEL_image_agreement)),
+                partner_type=c("same","different")))
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, partner_type  ~ c_FASQUEL_image_agreement, at=mylist,CIs=TRUE, plotit=TRUE)
+
+# plot
+p1 <- ggplot(P200_marginalMeans$data, aes(x=c_FASQUEL_image_agreement, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.3)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.2, position=position_dodge(0.3)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  #facet_grid(cols = "PC1") +
+  labs(y="P200 (\u00b5V)", x="Image Agreement (centered)") +
+  ylim(-4, 20) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_imageagreement.pdf", width=5, height=4)
+```
+
+#### \>Post-hoc: Partner Type x entrainment_VOTinv x Frequency
+
+```{r}
+
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5,  1)))
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv_x_frequency.csv", row.names = FALSE)
+
+# make post-hoc without correction
+emm_none <-emmeans(m_P200_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv * c_SUBTLEX_frequency_log, adjust ="none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv_x_frequency.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv),median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
+                c_SUBTLEX_frequency_log=c(min(P200$c_SUBTLEX_frequency_log), median (P200$c_SUBTLEX_frequency_log), max(P200$c_SUBTLEX_frequency_log)),
+                partner_type=c("same","different")))
+P200_marginalMeans <- emmip(m_P200_entr_VOTinv@model, c_SUBTLEX_frequency_log ~ partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+
+# plot
+p <- ggplot(P200_marginalMeans$data, aes(x=partner_type, y=yvar, color=partner_type, group=c_SUBTLEX_frequency_log)) +
+  geom_point(stat = "identity") +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.2, position=position_dodge(0.9)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  facet_grid(c_SUBTLEX_frequency_log ~ entrainment_VOTinv) +
+  labs(y="P200 (\u00b5V)", x="Entrainment NL (centered)") +
+  ylim(-4, 20) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_x_frequency.pdf")
+```
+
+## LMM P300 incl. entrainment_VOTinv
+
+Prepare data for LMM.
+
+```{r}
+# add the PC1 data to the trial-by-trial P200 data
+P300 <- merge(x = P300, y = entrainment_data[c('subjID', 'PC1', 'entrainment_VOTinv', 'entrainment_VOT', 'entrainment_ACC')], by = "subjID", all.x = TRUE)
+
+# center PC1
+P300 <- P300 %>%
+  mutate(c_PC1 = PC1 - mean(PC1, na.rm=TRUE),
+         c_entrainment_VOTinv = entrainment_VOTinv - mean(entrainment_VOTinv, na.rm=TRUE),
+         c_entrainment_VOT = entrainment_VOT - mean(entrainment_VOT, na.rm=TRUE),
+         c_entrainment_ACC = entrainment_ACC - mean(entrainment_ACC, na.rm=TRUE)
+         )
+```
+
+Model.
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness * entrainment_VOTinv +
+     (partner_type*block*c_SUBTLEX_frequency_log * c_FASQUEL_image_agreement * c_FASQUEL_concreteness*entrainment_VOTinv | subjID) +
+     (partner_type*block*entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P300_entr_VOTinv <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_entr_VOTinv)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_entrVOTinv.txt")
+summary(m_P300_entr_VOTinv)
+sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOTinv@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOTinv.html")
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P300_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey",, cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300entrainment_ph_tukey_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P300_entr_VOTinv@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+P300_ph_none <- as.data.frame(emm_none$contrasts)
+P300_ph_none$Bonf2 <- P300_ph_none$p.value * 2
+P300_ph_none$Bonf3 <- P300_ph_none$p.value * 3
+write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P300$entrainment_VOTinv), median(P300$entrainment_VOTinv), max(P300$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+P300_marginalMeans <- emmip(m_P300_entr_VOTinv@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(P300_marginalMeans$data,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_x_entrVOTinv.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(P300_marginalMeans$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  #geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  #facet_grid(cols = "PC1") +
+  labs(y="P300 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_entrVOTinv.pdf", width=4, height=3)
+```
+
+#### \>Post-hoc: Patner Type x Block
+
+```{r}
+# make post-hoc with tukey correction
+emm_tukey <-emmeans(m_P300_entr@model, pairwise ~ partner_type * block, adjust ="Tukey")
+P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300entrainment_ph_tukey_partner_x_block.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+emm_none <-emmeans(m_P300_entr@model, pairwise ~ partner_type * block, adjust = "none")
+P300_ph_none <- as.data.frame(emm_none$contrasts)
+P300_ph_none$Bonf2 <- P300_ph_none$p.value * 2
+write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_x_block.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(block=c("1", "2"),
+                partner_type=c("same","different")))
+P300_marginalMeans <- emmip(m_P300_entr@model, partner_type  ~ block, at=mylist,CIs=TRUE, plotit=TRUE)
+
+# plot
+p <- ggplot(P300_marginalMeans$data, aes(x=block, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.2, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  ylim(-4, 20) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16))
+p
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_block.pdf", width=5, height=4)
+```
+
+# Session Information
+
+```{r}
+sessionInfo()
+```
