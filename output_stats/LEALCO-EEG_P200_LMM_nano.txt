@@ -1,0 +1,39 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P200 ~ 1 + partner_type + block + partner_type:block + (1 + block +      partner_type | subjID) + (1 | target_label)
+   Data: P200
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),      checkConv = list(check.conv.grad = list(action = "warning",  
+        tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 27550
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3022 -0.6463 -0.0084  0.6115  4.1896 
+
+Random effects:
+ Groups       Name          Variance Std.Dev. Corr       
+ target_label (Intercept)    0.97263 0.9862              
+ subjID       (Intercept)    4.62567 2.1507              
+              block1         0.18925 0.4350   -0.28      
+              partner_type1  0.07525 0.2743    0.00 -0.22
+ Residual                   60.65105 7.7879              
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           3.41734    0.36308   9.412   <2e-16 ***
+partner_type1        -0.11277    0.13132  -0.859    0.390    
+block1                0.06908    0.13981   0.494    0.621    
+partner_type1:block1 -0.16820    0.12441  -1.352    0.176    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) prtn_1 block1
+partnr_typ1 -0.002              
+block1      -0.092 -0.022       
+prtnr_ty1:1  0.003  0.048 -0.006

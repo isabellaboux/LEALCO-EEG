@@ -688,7 +688,7 @@ dev.off()
 a
 ```
 
-## LMM
+## LMM - original submission
 
 Prepare the ACC data for LMMs.
 
@@ -855,6 +855,113 @@ dev.off()
 b
 ```
 
+## LLM - covariate
+
+```{r}
+
+# indicate the maximal effect srucutre (both fixend and rendom) that is motivated based on design & hypotheses
+f <- correct ~ partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness +
+     (partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_acc_cov <- buildmer(f,family=binomial, data=acc,buildmerControl=buildmerControl(direction='order',
+          args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_acc_cov)
+
+sink("output_stats/LEALCO-EEG_acc_lmm_covariate.txt")
+print(summary(m_acc_cov))
+sink()  # returns output to the console
+
+save_model_to_html(m_acc_cov@model, 3,  "LEALCO-EEG_acc_lmm_covariate.html")
+```
+
+### \>Post-hoc / maginal means (Block) 
+
+```{r}
+# make post-hoc with no correction
+m_acc_cov.emm_none_block <-emmeans(m_acc_cov@model, pairwise ~ block, adjust = "none")
+m_acc_cov.ph_none_block <- as.data.frame(m_acc_cov.emm_none_block$contrasts)
+write.csv(m_acc_cov.ph_none_block,"output_stats/LEALCO-EEG_acc_ph_none_block_covariate.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_acc_cov.mm_block <- as.data.frame(m_acc_cov.emm_none_block$emmeans)
+m_acc_cov.mm_block$emmean_untrans <- plogis(m_acc_cov.mm_block$emmean)
+m_acc_cov.mm_block$asymp.LCL_untrans <- plogis(m_acc_cov.mm_block$asymp.LCL)
+m_acc_cov.mm_block$asymp.UCL_untrans <- plogis(m_acc_cov.mm_block$asymp.UCL)
+
+# save them
+write.csv(m_acc_cov.mm_block,"output_stats/LEALCO-EEG_acc_lmm_marginal_block_covariate.csv", row.names = FALSE)
+
+# visualize marginal means
+pdf("output_figures/LEALCO-EEG_acc_lmm_marginal_block_pointplot_covariate.pdf")
+tt <- ggplot(m_acc_cov.mm_block, aes(y=emmean_untrans*100, x=block)) + 
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans*100, ymax=asymp.UCL_untrans*100), width=.2, position=position_dodge(.9)) +
+  labs(y="Label Maintenance (%)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,100)
+tt
+dev.off()
+tt
+```
+
+### \>Post-hoc / maginal means (Partner Type)
+
+```{r}
+# make post-hoc with tukey correction
+m_acc_cov.emm_tukey_partner <-emmeans(m_acc_cov@model, pairwise ~ partner_type, adjust = "Tukey")
+m_acc_cov.ph_tukey_partner <- as.data.frame(m_acc_cov.emm_tukey_partner$contrasts)
+write.csv(m_acc_cov.ph_tukey_partner,"output_stats/LEALCO-EEG_acc_ph_tukey_partner_covariate.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_acc_cov.emm_none_partner <-emmeans(m_acc_cov@model, pairwise ~ partner_type, adjust = "none")
+m_acc_cov.ph_none_partner <- as.data.frame(m_acc_cov.emm_none_partner$contrasts)
+write.csv(m_acc_cov.ph_none_partner,"output_stats/LEALCO-EEG_acc_ph_none_partner_covariate.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_acc_cov.mm_partner <- as.data.frame(m_acc_cov.emm_none_partner$emmeans)
+m_acc_cov.mm_partner$emmean_untrans <- plogis(m_acc_cov.mm_partner$emmean)
+m_acc_cov.mm_partner$asymp.LCL_untrans <- plogis(m_acc_cov.mm_partner$asymp.LCL)
+m_acc_cov.mm_partner$asymp.UCL_untrans <- plogis(m_acc_cov.mm_partner$asymp.UCL)
+
+# save them
+write.csv(m_acc_cov.mm_partner,"output_stats/LEALCO-EEG_acc_lmm_marginal_partner_covariate.csv", row.names = FALSE)
+
+# visualize marginal means
+tt <- ggplot(m_acc_cov.mm_partner, aes(y=emmean_untrans*100, x=partner_type, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans*100, ymax=asymp.UCL_untrans*100), width=.2, position=position_dodge(.9)) +
+  labs(y="Label Maintenance (%)", x="Partner") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,100)
+tt
+ggsave("output_figures/LEALCO-EEG_acc_lmm_marginal_partner_pointplot_covariate.pdf", width=4
+       , height=3.5)
+```
+
+## LLM - essential
+
+```{r}
+
+# indicate the maximal effect srucutre (both fixend and rendom) that is motivated based on design & hypotheses
+f <- correct ~ partner_type * block + c_FASQUEL_image_agreement + 
+     (partner_type * block + c_FASQUEL_image_agreement  | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_acc_ess <- buildmer(f,family=binomial, data=acc,buildmerControl=buildmerControl(direction='order',
+          args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_acc_ess)
+
+sink("output_stats/LEALCO-EEG_acc_lmm_essential.txt")
+print(summary(m_acc_ess))
+sink()  # returns output to the console
+
+save_model_to_html(m_acc_ess@model, 3,  "LEALCO-EEG_acc_lmm_essential.html")
+```
+
 # == Naming Latencies (at correct trials) ==
 
 ## Desciptive analysis
@@ -995,7 +1102,7 @@ dev.off()
 tt
 ```
 
-## LMM
+## LMM - original submission
 
 Prepare the VOT data for LMMs. Note that we will be running he model on inverted naming latency (1/naming latency). This results in the magnitude of the datapoints being inverted. The estimates of the models have to be read accordingly.
 
@@ -1031,7 +1138,8 @@ votINV <- votINV %>%
 votINV <- votINV %>%
   mutate(team = team - mean(team, na.rm=TRUE))
 
-votINV$VOTinv_fact <- votINV$VOTinv * 10000
+factor <- 10000
+votINV$VOTinv_fact <- votINV$VOTinv * factor
 ```
 
 Try to find the maximally convergent model by using the *buildmer()* approach.
@@ -1161,6 +1269,159 @@ tt <- ggplot(m_votINV.mm_partner_x_block, aes(y=emmean_untrans, x=block, color=p
   ylim(0,1700)
 tt
 ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_partner_x_block_pointplot.pdf", width=4 , height=3.5)
+```
+
+## LMM - covariates
+
+```{r}
+
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- VOTinv_fact ~ partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness +
+     (partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_votINV_cov <- buildmer(f,data=votINV,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_votINV_cov)
+
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_votINV_LMM_cov.txt")
+summary(m_votINV_cov)
+sink(file = NULL)
+
+save_model_to_html(m_votINV_cov@model, 3, 'LEALCO-EEG_votINV_LMM_cov.html')
+```
+
+#### \>Post-hoc / marginal-means (Block)
+
+```{r}
+# make post-hoc with no correction
+m_votINV_cov.emm_none_block <-emmeans(m_votINV_cov@model, pairwise ~ block, adjust = "none")
+m_votINV_cov.ph_none_block <- as.data.frame(m_votINV_cov.emm_none_block$contrasts)
+write.csv(m_votINV_cov.ph_none_block,"output_stats/LEALCO-EEG_votINV_ph_none_block.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_votINV_cov.mm_block <- as.data.frame(m_votINV_cov.emm_none_block$emmeans)
+m_votINV_cov.mm_block$emmean_untrans <- 1/(m_votINV_cov.mm_block$emmean / factor)
+m_votINV_cov.mm_block$asymp.LCL_untrans <- 1/(m_votINV_cov.mm_block$asymp.LCL / factor)
+m_votINV_cov.mm_block$asymp.UCL_untrans <- 1/(m_votINV_cov.mm_block$asymp.UCL / factor)
+
+# save them
+write.csv(m_votINV_cov.mm_block,"output_stats/LEALCO-EEG_votINV_lmm_marginal_block_cov.csv", row.names = FALSE)
+
+# visualize marginal means
+tt <- ggplot(m_votINV_cov.mm_block, aes(y=emmean_untrans, x=block)) + 
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL_untrans, ymax=asymp.UCL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming Latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_block_pointplot_cov.pdf", width=4 , height=3.5)
+```
+
+#### \>Post-hoc / marginal-means (Partner Type)
+
+```{r}
+# make post-hoc with no correction (partner)
+m_votINV_cov.emm_none_partner <-emmeans(m_votINV_cov@model, pairwise ~ partner_type, adjust = "none")
+m_votINV_cov.ph_none_partner <- as.data.frame(m_votINV_cov.emm_none_partner$contrasts)
+write.csv(m_votINV_cov.ph_none_partner,"output_stats/LEALCO-EEG_votINV_ph_none_partner.csv", row.names = FALSE)
+
+# extract and save marginal means (partner)
+m_votINV_cov.mm_partner <- as.data.frame(m_votINV_cov.emm_none_partner$emmeans)
+m_votINV_cov.mm_partner$emmean_untrans <- 1/(m_votINV_cov.mm_partner$emmean / factor)
+m_votINV_cov.mm_partner$lower.CL_untrans <- 1/(m_votINV_cov.mm_partner$asymp.UCL / factor)
+m_votINV_cov.mm_partner$upper.CL_untrans <- 1/(m_votINV_cov.mm_partner$asymp.LCL / factor)
+write.csv(m_votINV_cov.mm_partner,"output_stats/LEALCO-EEG_votINV_lmm_marginal_partner_cov.csv", row.names = FALSE)
+
+tt <- ggplot(m_votINV_cov.mm_partner, aes(y=emmean_untrans, x=partner_type, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=lower.CL_untrans, ymax=upper.CL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming latencies (ms)", x="Partner Type") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_partner_pointplot_cov.pdf", width=4 , height=3.5)
+```
+
+#### \>Post-hoc / marginal-means (Partner Type x Block)
+
+```{r}
+
+# make post-hoc with tukey correction
+m_votINV_cov.emm_tukey_partner_x_block <-emmeans(m_votINV_cov@model, pairwise ~ partner_type * block, adjust = "tukey")
+m_votINV_cov.ph_tukey_partner_x_block <- as.data.frame(m_votINV_cov.emm_tukey_partner_x_block$contrasts)
+write.csv(m_votINV_cov.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_votINV_ph_tukey_partner_x_block_cov.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_votINV_cov.emm_none_partner_x_block <-emmeans(m_votINV_cov@model, pairwise ~ partner_type * block, adjust = "none")
+m_votINV_cov.ph_none_partner_x_block <- as.data.frame(m_votINV_cov.emm_none_partner_x_block$contrasts)
+m_votINV_cov.ph_none_partner_x_block$p.valueBonf2 = m_votINV_cov.ph_none_partner_x_block$p.value *2
+write.csv(m_votINV_cov.ph_none_partner_x_block,"output_stats/LEALCO-EEG_votINV_ph_none_partner_x_block_cov.csv", row.names = FALSE)
+
+# extract and save marginal means
+m_votINV_cov.mm_partner_x_block <- as.data.frame(m_votINV_cov.emm_tukey_partner_x_block$emmeans)
+m_votINV_cov.mm_partner_x_block$emmean_untrans <- 1/(m_votINV_cov.mm_partner_x_block$emmean / factor)
+m_votINV_cov.mm_partner_x_block$lower.CL_untrans <- 1/(m_votINV_cov.mm_partner_x_block$asymp.UCL / factor)
+m_votINV_cov.mm_partner_x_block$upper.CL_untrans <- 1/(m_votINV_cov.mm_partner_x_block$asymp.LCL / factor)
+write.csv(m_votINV_cov.mm_partner_x_block,"output_stats/LEALCO-EEG_votINV_lmm_marginal_partner_x_block_cov.csv", row.names = FALSE)
+
+# plot
+tt <- ggplot(m_votINV_cov.mm_partner_x_block, aes(y=emmean_untrans, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=lower.CL_untrans, ymax=upper.CL_untrans), width=.2, position=position_dodge(.9)) +
+  labs(y="Naming Latencies (ms)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  ylim(0,1700)
+tt
+ggsave("output_figures/LEALCO-EEG_votINV_lmm_marginal_partner_x_block_pointplot_cov.pdf", width=4 , height=3.5)
+```
+
+## LMM - essential
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- VOTinv_fact ~ partner_type * block + c_FASQUEL_image_agreement +
+     (partner_type * block +  c_FASQUEL_image_agreement | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_votINV_ess <- buildmer(f,data=votINV,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_votINV_ess)
+
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_votINV_LMM_ess.txt")
+summary(m_votINV_ess)
+sink(file = NULL)
+
+save_model_to_html(m_votINV_ess@model, 3, 'LEALCO-EEG_votINV_LMM_ess.html')
+
+```
+
+## LMM - nano
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- VOTinv_fact ~ partner_type * block + 
+     (partner_type * block | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_votINV_nano <- buildmer(f,data=votINV,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_votINV_nano)
+
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_votINV_LMM_nano.txt")
+summary(m_votINV_nano)
+sink(file = NULL)
+
+save_model_to_html(m_votINV_nano@model, 3, 'LEALCO-EEG_votINV_LMM_nano.html')
 ```
 
 # == P200 (at correct trials) ==
@@ -1303,7 +1564,7 @@ dev.off()
 tt
 ```
 
-## LMM
+## LMM - original submission
 
 Prepare the P200 data for LMMs.
 
@@ -1486,6 +1747,68 @@ bb <- ggplot(P200_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=
   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
 dev.off()
 bb
+```
+
+## LMM - covariates
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness +
+     (partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P200_cov <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_cov)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200_LMM_cov.txt")
+summary(m_P200_cov)
+sink(file = NULL)
+
+save_model_to_html(m_P200_cov@model, 3, 'LEALCO-EEG_P200_LMM_cov.html')
+```
+
+## LMM - essential
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block + c_FASQUEL_image_agreement +
+     (partner_type * block + c_FASQUEL_image_agreement | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P200_ess <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_ess)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200_LMM_ess.txt")
+summary(m_P200_ess)
+sink(file = NULL)
+
+save_model_to_html(m_P200_ess@model, 3, 'LEALCO-EEG_P200_LMM_ess.html')
+
+```
+
+## LMM - nano
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block +
+     (partner_type * block | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P200_nano <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_nano)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200_LMM_nano.txt")
+summary(m_P200_nano)
+sink(file = NULL)
+
+save_model_to_html(m_P200_nano@model, 3, 'LEALCO-EEG_P200_LMM_nano.html')
+
 ```
 
 # == P300 (at correct trials) ==

@@ -1,0 +1,49 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: VOTinv_fact ~ 1 + block + c_FASQUEL_image_agreement + partner_type +      c_FASQUEL_concreteness + block:partner_type + c_SUBTLEX_frequency_log +  
+    (1 + block + c_FASQUEL_image_agreement + c_FASQUEL_concreteness |          subjID) + (1 + partner_type + block | target_label)
+   Data: votINV
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),      checkConv = list(check.conv.grad = list(action = "warning",  
+        tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 17733.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.6080 -0.6367  0.0537  0.6935  7.4492 
+
+Random effects:
+ Groups       Name                      Variance Std.Dev. Corr             
+ target_label (Intercept)               0.84284  0.9181                    
+              partner_type1             0.03061  0.1750    0.01            
+              block1                    0.01130  0.1063   -0.28 -0.20      
+ subjID       (Intercept)               0.90612  0.9519                    
+              block1                    0.04648  0.2156    0.01            
+              c_FASQUEL_image_agreement 0.08422  0.2902    0.84  0.41      
+              c_FASQUEL_concreteness    0.12307  0.3508   -0.45  0.33 -0.54
+ Residual                               3.52006  1.8762                    
+Number of obs: 4226, groups:  target_label, 56; subjID, 51
+
+Fixed effects:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                7.29640    0.18382  39.694  < 2e-16 ***
+block1                    -0.60218    0.04442 -13.556  < 2e-16 ***
+c_FASQUEL_image_agreement  1.03294    0.47125   2.192 0.028385 *  
+partner_type1              0.14588    0.03768   3.871 0.000108 ***
+c_FASQUEL_concreteness     0.27106    0.41914   0.647 0.517817    
+c_SUBTLEX_frequency_log    0.02469    0.16747   0.147 0.882790    
+block1:partner_type1       0.05206    0.02908   1.790 0.073391 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) block1 c_FASQUEL__ prtn_1 c_FASQUEL_c c_SUBT
+block1      -0.050                                             
+c_FASQUEL__  0.052  0.023                                      
+partnr_typ1  0.002 -0.038  0.001                               
+c_FASQUEL_c -0.013  0.022 -0.758       0.001                   
+c_SUBTLEX__  0.002  0.000  0.085      -0.002 -0.093            
+blck1:prt_1  0.000 -0.008 -0.001       0.046  0.002      -0.001

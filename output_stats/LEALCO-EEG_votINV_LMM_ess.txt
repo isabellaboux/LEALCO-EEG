@@ -1,0 +1,43 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: VOTinv_fact ~ 1 + block + c_FASQUEL_image_agreement + partner_type +      block:partner_type + (1 + block + c_FASQUEL_image_agreement |      subjID) + (1 + partner_type + block | target_label)
+   Data: votINV
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),      checkConv = list(check.conv.grad = list(action = "warning",  
+        tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 17736.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.5819 -0.6359  0.0569  0.6914  7.4377 
+
+Random effects:
+ Groups       Name                      Variance Std.Dev. Corr       
+ target_label (Intercept)               0.81265  0.9015              
+              partner_type1             0.03011  0.1735    0.00      
+              block1                    0.01162  0.1078   -0.25 -0.19
+ subjID       (Intercept)               0.90382  0.9507              
+              block1                    0.04647  0.2156   0.01       
+              c_FASQUEL_image_agreement 0.07770  0.2788   0.42  0.78 
+ Residual                               3.53197  1.8794              
+Number of obs: 4226, groups:  target_label, 56; subjID, 51
+
+Fixed effects:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                7.29610    0.18215  40.054  < 2e-16 ***
+block1                    -0.60202    0.04452 -13.523  < 2e-16 ***
+c_FASQUEL_image_agreement  1.24971    0.30230   4.134 3.56e-05 ***
+partner_type1              0.14507    0.03757   3.861 0.000113 ***
+block1:partner_type1       0.05111    0.02913   1.755 0.079283 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) block1 c_FASQ prtn_1
+block1      -0.041                     
+c_FASQUEL__  0.068  0.064              
+partnr_typ1  0.000 -0.038  0.003       
+blck1:prt_1  0.000 -0.008  0.000  0.046
