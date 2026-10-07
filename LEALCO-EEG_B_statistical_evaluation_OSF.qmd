@@ -17,6 +17,7 @@ The output file is a large .csv table containing the entire data of the file in 
 # Load packages
 
 ```{r}
+library(matrixCorr)
 library(dplyr)
 library(tidyverse)
 library(lme4)
@@ -1857,7 +1858,6 @@ ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, 
 
 
 ```
-
 
 ```{r}
 
