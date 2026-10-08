@@ -1,0 +1,43 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P300 ~ 1 + c_FASQUEL_image_agreement + block + partner_type +      block:partner_type + (1 + partner_type + c_FASQUEL_image_agreement |  
+    subjID) + (1 | target_label)
+   Data: P300
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list( 
+        action = "message", tol = 1e-04), check.conv.hess = list(         action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  
+"merControl"))
+
+REML criterion at convergence: 27741.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.0778 -0.6386 -0.0224  0.6214  3.6241 
+
+Random effects:
+ Groups       Name                      Variance Std.Dev. Corr     
+ target_label (Intercept)                1.0952  1.0465            
+ subjID       (Intercept)               13.3479  3.6535            
+              partner_type1              0.1205  0.3471   0.49     
+              c_FASQUEL_image_agreement  1.0483  1.0238   0.12 0.75
+ Residual                               62.9718  7.9355            
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               10.40069    0.56594  18.378   <2e-16 ***
+c_FASQUEL_image_agreement  0.68090    0.48528   1.403   0.1606    
+block1                    -0.08643    0.12678  -0.682   0.4954    
+partner_type1             -0.17344    0.13747  -1.262   0.2071    
+block1:partner_type1      -0.25694    0.12667  -2.028   0.0425 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) c_FASQ block1 prtn_1
+c_FASQUEL__  0.040                     
+block1       0.012 -0.012              
+partnr_typ1  0.167  0.094  0.009       
+blck1:prt_1  0.002  0.000 -0.007  0.047

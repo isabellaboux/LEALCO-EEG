@@ -1773,20 +1773,20 @@ save_model_to_html(m_P200_cov@model, 3, 'LEALCO-EEG_P200_LMM_cov.html')
 
 ```{r}
 # make post-hoc with tukey correction (partner x block)
-emm_tukey <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "Tukey")
-P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block.csv", row.names = FALSE)
+m_P200_cov.emm_tukey_partner_x_block <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P200_cov.ph_tukey_partner_x_block <- as.data.frame(m_P200_cov.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P200_cov.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block_covariate.csv", row.names = FALSE)
 
 # make post-hoc with no correction (partner x block)
-emm_none <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "none")
-P200_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block.csv", row.names = FALSE)
+m_P200_cov.emm_none_partner_x_block  <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "none")
+m_P200_cov.ph_none_partner_x_block <- as.data.frame(m_P200_cov.emm_none_partner_x_block$contrasts)
+write.csv(m_P200_cov.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_cov.csv", row.names = FALSE)
 
 # extract and save marginal means (partner x block)
-P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+m_P200_cov.mm_partner_x_block <- as.data.frame(m_P200_cov.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P200_cov.mm_partner_x_block,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_covariate.csv", row.names = FALSE)
 
-tt <- ggplot(P200_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+tt <- ggplot(m_P200_cov.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
   scale_colour_manual(values = pal1) +
   geom_point(stat="identity", position=position_dodge(.9), size=3) +
   geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
@@ -1795,10 +1795,10 @@ tt <- ggplot(P200_marginalMeans, aes(y=emmean, x=block, color=partner_type)) +
   geom_hline(yintercept=0, linetype=3) +
   ylim(-4,14)
 tt
-ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot.pdf", width = 4, height = 3)
+ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot_covariate.pdf", width = 4, height = 3)
 ```
 
-## LMM - essential
+## LMM - essential (preregistered)
 
 ```{r}
 # indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
@@ -1817,6 +1817,35 @@ sink(file = NULL)
 
 save_model_to_html(m_P200_ess@model, 3, 'LEALCO-EEG_P200_LMM_ess.html')
 
+```
+
+#### \>Post-hoc: Partner x Block (which is n.s.!)
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+m_P200_ess.emm_tukey_partner_x_block <-emmeans(m_P200_ess@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P200_ess.ph_tukey_partner_x_block <- as.data.frame(m_P200_ess.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P200_ess.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block_essential.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+m_P200_ess.emm_none_partner_x_block  <-emmeans(m_P200_ess@model, pairwise ~ partner_type * block, adjust = "none")
+m_P200_ess.ph_none_partner_x_block <- as.data.frame(m_P200_ess.emm_none_partner_x_block$contrasts)
+write.csv(m_P200_ess.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block__essential.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+m_P200_ess.mm_partner_x_block <- as.data.frame(m_P200_ess.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P200_ess.mm_partner_x_block,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_essential.csv", row.names = FALSE)
+
+tt <- ggplot(m_P200_ess.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot_essential.pdf", width = 4, height = 3)
 ```
 
 ## LMM - nano
@@ -1980,7 +2009,7 @@ dev.off()
 tt
 ```
 
-## LMM
+## LMM - original submission
 
 Prepare the P300data for LMMs.
 
@@ -2063,22 +2092,20 @@ dev.off()
 
 ```{r}
 # make post-hoc with tukey correction (partner x block)
-emm_tukey <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "Tukey")
-P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block.csv", row.names = FALSE)
+m_P300.emm_tukey_partner_x_block <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P300.ph_tukey_partner_x_block <- as.data.frame(m_P300.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P300.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block.csv", row.names = FALSE)
 
 # make post-hoc with no correction (partner x block)
-emm_none <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "none")
-P300_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block.csv", row.names = FALSE)
-```
+m_P300.emm_none_partner_x_block  <-emmeans(m_P300@model, pairwise ~ partner_type * block, adjust = "none")
+m_P300.ph_none_partner_x_block <- as.data.frame(m_P300.emm_none_partner_x_block$contrasts)
+write.csv(m_P300.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block.csv", row.names = FALSE)
 
-```{r}
 # extract and save marginal means (partner x block)
-P300_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P300_marginalMeans,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+m_P300.mm_partner_x_block <- as.data.frame(m_P300.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P300.mm_partner_x_block,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block.csv", row.names = FALSE)
 
-tt <- ggplot(P300_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+tt <- ggplot(m_P300.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
   scale_colour_manual(values = pal1) +
   geom_point(stat="identity", position=position_dodge(.9), size=3) +
   geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
@@ -2095,14 +2122,14 @@ ggsave("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_pointplot.pd
 ```{r}
 
 # make post-hoc with tukey correction
-emm_tukey <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement * c_SUBTLEX_frequency_log, adjust = "Tukey")
-P300_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P300_ph_tukey,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+m_P300.emm_tukey_partner_x_block_x_concretness_x_agreement_x_frequency <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement * c_SUBTLEX_frequency_log, adjust = "Tukey")
+P300_ph_tukey_partner_x_block_x_concretness_x_agreement_x_frequency <- as.data.frame(m_P300.emm_tukey_partner_x_block_x_concretness_x_agreement_x_frequency$contrasts)
+write.csv(P300_ph_tukey_partner_x_block_x_concretness_x_agreement_x_frequency,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
 
 # make post-hoc with no correction
-emm_none <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
-P300_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+m_P300.emm_none_partner_x_block_x_concretness_x_agreement_x_frequency <-emmeans(m_P300@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
+P300_ph_none_partner_x_block_x_concretness_x_agreement_x_frequency <- as.data.frame(m_P300.emm_none_partner_x_block_x_concretness_x_agreement_x_frequency$contrasts)
+write.csv(P300_ph_none_partner_x_block_x_concretness_x_agreement_x_frequency,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
 
 # generate predicted data (but don't plot it yet with emmip)
 (mylist <- list(c_FASQUEL_concreteness=c(min(P300$c_FASQUEL_concreteness),max(P300$c_FASQUEL_concreteness)),
@@ -2110,14 +2137,14 @@ write.csv(P300_ph_none,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_x_c
                 c_SUBTLEX_frequency_log=c(min(P300$c_SUBTLEX_frequency_log),max(P300$c_SUBTLEX_frequency_log)),
                 partner_type=c("same","different"),
                 block=c('1', '2')))
-P300_marginalMeans <- emmip(m_P300@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type ~ c_SUBTLEX_frequency_log, at=mylist,CIs=TRUE, plotit=FALSE)
+m_P300.mm_partner_x_block_x_concretness_x_agreement_x_frequency <- emmip(m_P300@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type ~ c_SUBTLEX_frequency_log, at=mylist,CIs=TRUE, plotit=FALSE)
 
 #P300_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P300_marginalMeans,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
+write.csv(m_P300.mm_partner_x_block_x_concretness_x_agreement_x_frequency,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_x_concretness_x_agreement_x_frequency.csv", row.names = FALSE)
 
 # plot
 pdf("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_x_concretness_x_agreement_x_frequency.pdf")
-ggplot(P300_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
+tt <- ggplot(m_P300.mm_partner_x_block_x_concretness_x_agreement_x_frequency, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
   geom_line() + 
   geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
   scale_fill_manual(values = pal1) +
@@ -2125,7 +2152,159 @@ ggplot(P300_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partne
   facet_grid(c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ c_SUBTLEX_frequency_log) + 
   labs(y="P300 (\u00b5V)", x="Block") +
   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+tt
 dev.off()
+tt
+```
+
+## LMM - covariate
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness +
+     (partner_type * block + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P300_cov <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_cov)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300_LMM_covariate.txt")
+summary(m_P300_cov)
+sink(file = NULL)
+
+save_model_to_html(m_P300_cov@model, 3, 'LEALCO-EEG_P300_LMM_covariate.html')
+```
+
+### \>Post-hoc: Partner x Block
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+m_P300_cov.emm_tukey_partner_x_block <-emmeans(m_P300_cov@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P300_cov.ph_tukey_partner_x_block <- as.data.frame(m_P300_cov.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P300_cov.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_covariate.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+m_P300_cov.emm_none_partner_x_block  <-emmeans(m_P300_cov@model, pairwise ~ partner_type * block, adjust = "none")
+m_P300_cov.ph_none_partner_x_block <- as.data.frame(m_P300_cov.emm_none_partner_x_block$contrasts)
+m_P300_cov.ph_none_partner_x_block$p.value2 <- m_P300_cov.ph_none_partner_x_block$p.value * 2
+write.csv(m_P300_cov.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_covariate.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+m_P300_cov.mm_partner_x_block <- as.data.frame(m_P300_cov.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P300_cov.mm_partner_x_block,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_covariate.csv", row.names = FALSE)
+
+tt <- ggplot(m_P300_cov.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_pointplot_covariate.pdf", width = 4, height = 3)
+```
+
+## LMM - essential (preregistered)
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block + c_FASQUEL_image_agreement +
+     (partner_type * block  + c_FASQUEL_image_agreement  | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P300_ess <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_ess)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300_LMM_essential.txt")
+summary(m_P300_ess)
+sink(file = NULL)
+
+save_model_to_html(m_P300_ess@model, 3, 'LEALCO-EEG_P300_LMM_essential.html')
+```
+
+### \>Post-hoc: Partner x Block
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+m_P300_ess.emm_tukey_partner_x_block <-emmeans(m_P300_ess@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P300_ess.ph_tukey_partner_x_block <- as.data.frame(m_P300_ess.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P300_ess.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_essential.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+m_P300_ess.emm_none_partner_x_block  <-emmeans(m_P300_ess@model, pairwise ~ partner_type * block, adjust = "none")
+m_P300_ess.ph_none_partner_x_block <- as.data.frame(m_P300_ess.emm_none_partner_x_block$contrasts)
+m_P300_ess.ph_none_partner_x_block$p.value2 <- m_P300_ess.ph_none_partner_x_block$p.value * 2
+write.csv(m_P300_ess.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_essential.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+m_P300_ess.mm_partner_x_block <- as.data.frame(m_P300_ess.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P300_ess.mm_partner_x_block,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_essential.csv", row.names = FALSE)
+
+tt <- ggplot(m_P300_ess.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_pointplot_essential.pdf", width = 4, height = 3)
+```
+
+## LMM - nano
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block +
+     (partner_type * block | subjID) +
+     (partner_type * block | target_label)
+
+# select the maximal model that still converges
+m_P300_nano <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_nano)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300_LMM_nano.txt")
+summary(m_P300_nano)
+sink(file = NULL)
+
+save_model_to_html(m_P300_nano@model, 3, 'LEALCO-EEG_P300_LMM_nano.html')
+```
+
+### \>Post-hoc: Partner x Block
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+m_P300_nano.emm_tukey_partner_x_block <-emmeans(m_P300_nano@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P300_nano.ph_tukey_partner_x_block <- as.data.frame(m_P300_nano.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P300_nano.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_tukey_partner_x_block_nano.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+m_P300_nano.emm_none_partner_x_block  <-emmeans(m_P300_nano@model, pairwise ~ partner_type * block, adjust = "none")
+m_P300_nano.ph_none_partner_x_block <- as.data.frame(m_P300_nano.emm_none_partner_x_block$contrasts)
+m_P300_nano.ph_none_partner_x_block$p.value2 <- m_P300_nano.ph_none_partner_x_block$p.value * 2
+write.csv(m_P300_nano.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P300_ph_none_partner_x_block_nano.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+m_P300_nano.mm_partner_x_block <- as.data.frame(m_P300_nano.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P300_nano.mm_partner_x_block,"output_stats/LEALCO-EEG_P300_lmm_marginal_partner_x_block_nano.csv", row.names = FALSE)
+
+tt <- ggplot(m_P300_nano.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P300 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P300_lmm_marginal_partner_x_block_pointplot_nano.pdf", width = 4, height = 3)
 ```
 
 # == Entrainment ==
@@ -2208,6 +2387,50 @@ s <- ggplot(entrainment_data, aes(x=entrainment_VOTinv, y=entrainment_ACC)) +
 s
 ggsave("output_figures/LEALCO-EEG_entrainment_correlation_invVOT.pdf", width=6, height=3.5)
 
+
+```
+
+Also carry out the **percentage bend** **correlation** (Wilcox, 1994) and the **skipped Pearson correlation** (Wilcox, 2004).
+
+```{r}
+dat <- entrainment_data[, c("entrainment_ACC", "entrainment_VOTinv")]
+
+
+# Percentage-bend correlation (Wilcox, 1994)
+pb <- matrixCorr::pbcor(
+  dat,
+  beta = 0.20,
+  ci = TRUE,
+  p_value = TRUE,
+  n_boot = 2000,
+  seed = 123
+)
+
+# Skipped Pearson correlation (Wilcox, 2004)
+sk <- matrixCorr::skipped_corr(
+  dat,
+  method = "pearson",
+  ci = TRUE,
+  p_value = TRUE,
+  n_boot = 2000,
+  seed = 123,
+  return_masks = TRUE
+)
+
+# View results
+summary(pb)
+sink('output_stats/LEALCO-EEG_entrainment_correlationPB_invVOT.txt')
+print(summary(pb))
+sink()
+
+summary(sk)
+sink('output_stats/LEALCO-EEG_entrainment_correlationSK_invVOT.txt')
+print(summary(sk))
+sink()
+
+# Identify observations excluded from
+# the skipped correlation
+matrixCorr::skipped_corr_masks(sk, "entrainment_ACC", "entrainment_VOTinv")
 
 ```
 

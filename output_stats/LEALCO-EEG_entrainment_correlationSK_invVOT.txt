@@ -1,0 +1,20 @@
+Skipped correlation summary
+  output      : matrix
+  dimensions  : 2 x 2
+  retained_pairs: 3
+  threshold   : 0.0000
+  diag        : included
+  estimate    : 0.6950 to 1.0000
+  skipped_n   : 2
+  skipped_prop: 0.0392
+  inference   : bootstrap_b2
+  ci          : 95%
+  ci_width    : 0.262
+
+ item1           item2              estimate n_complete lwr    upr    p_value fisher_z
+ entrainment_ACC entrainment_VOTinv 0.6950   51         0.5548 0.8165 0.0000  0.8577  
+
+Strongest pairs by |estimate|
+
+ item1           item2              estimate  n_complete lwr       upr      p_value fisher_z 
+ entrainment_ACC entrainment_VOTinv 0.6950457 51         0.5547891 0.816548 0       0.8576515

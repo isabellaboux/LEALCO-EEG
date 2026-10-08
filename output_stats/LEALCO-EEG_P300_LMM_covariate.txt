@@ -1,0 +1,47 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P300 ~ 1 + c_FASQUEL_image_agreement + block + partner_type +      block:partner_type + c_FASQUEL_concreteness + c_SUBTLEX_frequency_log +  
+    (1 + partner_type + c_FASQUEL_image_agreement | subjID) +      (1 | target_label)
+   Data: P300
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list( 
+        check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",          check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",  
+        check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list( 
+        action = "message", tol = 1e-04), check.conv.hess = list(         action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  
+"merControl"))
+
+REML criterion at convergence: 27741.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.0851 -0.6396 -0.0209  0.6240  3.6280 
+
+Random effects:
+ Groups       Name                      Variance Std.Dev. Corr     
+ target_label (Intercept)                1.1646  1.0792            
+ subjID       (Intercept)               13.3464  3.6533            
+              partner_type1              0.1164  0.3412   0.49     
+              c_FASQUEL_image_agreement  1.0501  1.0247   0.11 0.75
+ Residual                               62.9755  7.9357            
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                          Estimate Std. Error t value Pr(>|t|)    
+(Intercept)               10.40251    0.56703  18.345   <2e-16 ***
+c_FASQUEL_image_agreement  0.50469    0.73235   0.689   0.4907    
+block1                    -0.08645    0.12679  -0.682   0.4954    
+partner_type1             -0.17335    0.13716  -1.264   0.2063    
+c_FASQUEL_concreteness     0.20917    0.63441   0.330   0.7416    
+c_SUBTLEX_frequency_log    0.03997    0.25618   0.156   0.8760    
+block1:partner_type1      -0.25673    0.12668  -2.027   0.0427 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) c_FASQUEL__ block1 prtn_1 c_FASQUEL_c c_SUBT
+c_FASQUEL__  0.023                                             
+block1       0.012 -0.003                                      
+partnr_typ1  0.165  0.062       0.009                          
+c_FASQUEL_c  0.006 -0.740      -0.006  0.000                   
+c_SUBTLEX__  0.001  0.070       0.001 -0.006 -0.083            
+blck1:prt_1  0.002 -0.003      -0.007  0.047  0.005      -0.001

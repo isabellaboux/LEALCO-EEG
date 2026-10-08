@@ -1,0 +1,19 @@
+Percentage bend correlation summary
+  output      : matrix
+  dimensions  : 2 x 2
+  retained_pairs: 3
+  threshold   : 0.0000
+  diag        : included
+  estimate    : 0.7413 to 1.0000
+  inference   : percentage_bend_t_test
+  ci          : 95%
+  ci_method   : percentile_bootstrap
+  ci_width    : 0.253
+
+ item1           item2              estimate n_complete lwr    upr    statistic df      p_value fisher_z
+ entrainment_ACC entrainment_VOTinv 0.7413   51         0.5964 0.8494 7.7308    49.0000 0.0000  0.9533  
+
+Strongest pairs by |estimate|
+
+ item1           item2              estimate  n_complete lwr       upr       statistic df p_value      fisher_z
+ entrainment_ACC entrainment_VOTinv 0.7412747 51         0.5964178 0.8494478 7.730795  49 4.939881e-10 0.953303
