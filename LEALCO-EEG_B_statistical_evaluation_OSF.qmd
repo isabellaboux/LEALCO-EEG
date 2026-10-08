@@ -1646,20 +1646,20 @@ Note that this specific interaction is not significant. However, let's still hav
 
 ```{r}
 # make post-hoc with tukey correction (partner x block)
-emm_tukey <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "Tukey")
-P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block.csv", row.names = FALSE)
+m_P200.emm_tukey_partner_x_block <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "Tukey")
+m_P200.ph_tukey_partner_x_block <- as.data.frame(m_P200.emm_tukey_partner_x_block$contrasts)
+write.csv(m_P200.ph_tukey_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block.csv", row.names = FALSE)
 
 # make post-hoc with no correction (partner x block)
-emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "none")
-P200_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block.csv", row.names = FALSE)
+m_P200.emm_none_partner_x_block  <-emmeans(m_P200@model, pairwise ~ partner_type * block, adjust = "none")
+m_P200.ph_none_partner_x_block <- as.data.frame(m_P200.emm_none_partner_x_block$contrasts)
+write.csv(m_P200.ph_none_partner_x_block,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block.csv", row.names = FALSE)
 
 # extract and save marginal means (partner x block)
-P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+m_P200.mm_partner_x_block <- as.data.frame(m_P200.emm_tukey_partner_x_block$emmeans)
+write.csv(m_P200.mm_partner_x_block,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block.csv", row.names = FALSE)
 
-tt <- ggplot(P200_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+tt <- ggplot(m_P200.mm_partner_x_block, aes(y=emmean, x=block, color=partner_type)) + 
   scale_colour_manual(values = pal1) +
   geom_point(stat="identity", position=position_dodge(.9), size=3) +
   geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
@@ -1675,78 +1675,78 @@ ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot.pd
 
 ```{r}
 
-
-# make post-hoc with no correction
-emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none")
-P200_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
-
-# make post-hoc with no correction
-emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
-P200_ph_none <- as.data.frame(emm_none$contrasts)
-P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
-P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
-
-# generate predicted data (but don't plot it yet with emmip)
-(mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
-                partner_type=c("same","different"),
-                block=c('1', '2')))
-P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness  ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
-
-#P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.csv", row.names = FALSE)
-
-# plot
-pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.pdf")
-b <- ggplot(P200_marginalMeans, aes(x=c_FASQUEL_concreteness, y=yvar, color=partner_type, group=partner_type))+
-  geom_line() + 
-  geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
-  scale_fill_manual(values = pal1) +
-  scale_color_manual(values = pal1) +
-  facet_grid(~ block) + 
-  labs(y="P200 (\u00b5V)", x="Concreteness") +
-  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
-dev.off()
-b
+# 
+# # make post-hoc with no correction
+# emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none")
+# P200_ph_none <- as.data.frame(emm_none$contrasts)
+# write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
+# 
+# # make post-hoc with no correction
+# emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness, adjust = "none", , cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+# P200_ph_none <- as.data.frame(emm_none$contrasts)
+# P200_ph_none$Bonf2 <- P200_ph_none$p.value * 2
+# P200_ph_none$Bonf3 <- P200_ph_none$p.value * 3
+# write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness.csv", row.names = FALSE)
+# 
+# # generate predicted data (but don't plot it yet with emmip)
+# (mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
+#                 partner_type=c("same","different"),
+#                 block=c('1', '2')))
+# P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness  ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
+# 
+# #P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+# write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.csv", row.names = FALSE)
+# 
+# # plot
+# pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness.pdf")
+# b <- ggplot(P200_marginalMeans, aes(x=c_FASQUEL_concreteness, y=yvar, color=partner_type, group=partner_type))+
+#   geom_line() + 
+#   geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+#   scale_fill_manual(values = pal1) +
+#   scale_color_manual(values = pal1) +
+#   facet_grid(~ block) + 
+#   labs(y="P200 (\u00b5V)", x="Concreteness") +
+#   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+# dev.off()
+# b
 ```
 
 #### \>Post-hoc: Partner x Block x Concreteness x Image Agreement
 
 ```{r}
 
-# make post-hoc with tukey correction
-emm_tukey <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "Tukey")
-P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
-write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
-
-# make post-hoc with no correction
-emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
-P200_ph_none <- as.data.frame(emm_none$contrasts)
-write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
-
-# generate predicted data (but don't plot it yet with emmip)
-(mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
-                c_FASQUEL_image_agreement=c(min(P200$c_FASQUEL_image_agreement),max(P200$c_FASQUEL_image_agreement)),
-                partner_type=c("same","different"),
-                block=c('1', '2')))
-P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
-
-#P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
-write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
-
-# plot
-pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.pdf")
-bb <- ggplot(P200_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
-  geom_line() + 
-  geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
-  scale_fill_manual(values = pal1) +
-  scale_color_manual(values = pal1) +
-  facet_grid(c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement) + 
-  labs(y="P200 (\u00b5V)", x="Block") +
-  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
-dev.off()
-bb
+# # make post-hoc with tukey correction
+# emm_tukey <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "Tukey")
+# P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+# write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+# 
+# # make post-hoc with no correction
+# emm_none <-emmeans(m_P200@model, pairwise ~ partner_type * block * c_FASQUEL_concreteness * c_FASQUEL_image_agreement, adjust = "none")
+# P200_ph_none <- as.data.frame(emm_none$contrasts)
+# write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+# 
+# # generate predicted data (but don't plot it yet with emmip)
+# (mylist <- list(c_FASQUEL_concreteness=c(min(P200$c_FASQUEL_concreteness),max(P200$c_FASQUEL_concreteness)),
+#                 c_FASQUEL_image_agreement=c(min(P200$c_FASQUEL_image_agreement),max(P200$c_FASQUEL_image_agreement)),
+#                 partner_type=c("same","different"),
+#                 block=c('1', '2')))
+# P200_marginalMeans <- emmip(m_P200@model, c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement ~ block ~ partner_type, at=mylist,CIs=TRUE, plotit=FALSE)
+# 
+# #P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+# write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.csv", row.names = FALSE)
+# 
+# # plot
+# pdf("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_x_concretness_x_agreement.pdf")
+# bb <- ggplot(P200_marginalMeans, aes(x=block, y=yvar, color=partner_type, group=partner_type))+
+#   geom_line() + 
+#   geom_ribbon(aes(ymin=LCL, ymax=UCL, fill=partner_type), alpha=.5) +
+#   scale_fill_manual(values = pal1) +
+#   scale_color_manual(values = pal1) +
+#   facet_grid(c_FASQUEL_concreteness ~ c_FASQUEL_image_agreement) + 
+#   labs(y="P200 (\u00b5V)", x="Block") +
+#   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+# dev.off()
+# bb
 ```
 
 ## LMM - covariates
@@ -1767,6 +1767,35 @@ summary(m_P200_cov)
 sink(file = NULL)
 
 save_model_to_html(m_P200_cov@model, 3, 'LEALCO-EEG_P200_LMM_cov.html')
+```
+
+#### \>Post-hoc: Partner x Block (which is n.s.!)
+
+```{r}
+# make post-hoc with tukey correction (partner x block)
+emm_tukey <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "Tukey")
+P200_ph_tukey <- as.data.frame(emm_tukey$contrasts)
+write.csv(P200_ph_tukey,"output_stats/LEALCO-EEG_P200_ph_tukey_partner_x_block.csv", row.names = FALSE)
+
+# make post-hoc with no correction (partner x block)
+emm_none <-emmeans(m_P200_cov@model, pairwise ~ partner_type * block, adjust = "none")
+P200_ph_none <- as.data.frame(emm_none$contrasts)
+write.csv(P200_ph_none,"output_stats/LEALCO-EEG_P200_ph_none_partner_x_block.csv", row.names = FALSE)
+
+# extract and save marginal means (partner x block)
+P200_marginalMeans <- as.data.frame(emm_tukey$emmeans)
+write.csv(P200_marginalMeans,"output_stats/LEALCO-EEG_P200_lmm_marginal_partner_x_block.csv", row.names = FALSE)
+
+tt <- ggplot(P200_marginalMeans, aes(y=emmean, x=block, color=partner_type)) + 
+  scale_colour_manual(values = pal1) +
+  geom_point(stat="identity", position=position_dodge(.9), size=3) +
+  geom_errorbar(aes(ymin=asymp.LCL, ymax=asymp.UCL), width=.2, position=position_dodge(.9)) +
+  labs(y="P200 (\u00b5V)", x="Block") +
+  theme(axis.text=element_text(size=12), axis.title=element_text(size=16)) +
+  geom_hline(yintercept=0, linetype=3) +
+  ylim(-4,14)
+tt
+ggsave("output_figures/LEALCO-EEG_P200_lmm_marginal_partner_x_block_pointplot.pdf", width = 4, height = 3)
 ```
 
 ## LMM - essential
