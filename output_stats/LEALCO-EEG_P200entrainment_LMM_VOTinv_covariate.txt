@@ -1,0 +1,54 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P200 ~ 1 + partner_type + entrainment_VOTinv + partner_type:entrainment_VOTinv +      c_FASQUEL_concreteness + block + partner_type:block + entrainment_VOTinv:block +  
+    partner_type:entrainment_VOTinv:block + c_SUBTLEX_frequency_log +      c_FASQUEL_image_agreement + (1 + entrainment_VOTinv + block +      partner_type | subjID) + (1 | target_label)
+   Data: P200
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list(         check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",  
+        check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",          check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 27546.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.2676 -0.6387 -0.0103  0.6150  4.1746 
+
+Random effects:
+ Groups       Name               Variance Std.Dev. Corr             
+ target_label (Intercept)         1.01638 1.0082                    
+ subjID       (Intercept)         3.70383 1.9245                    
+              entrainment_VOTinv  1.77353 1.3317   -0.50            
+              block1              0.18678 0.4322   -0.45  0.41      
+              partner_type1       0.04183 0.2045   -0.04 -0.05 -0.78
+ Residual                        60.64840 7.7877                    
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                                         Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                              3.479076   0.394624   8.816   <2e-16 ***
+partner_type1                           -0.206550   0.136474  -1.513   0.1302    
+entrainment_VOTinv                      -0.004836   0.381268  -0.013   0.9899    
+c_FASQUEL_concreteness                  -0.141311   0.605752  -0.233   0.8155    
+block1                                   0.035674   0.144631   0.247   0.8052    
+c_SUBTLEX_frequency_log                  0.013079   0.244687   0.053   0.9574    
+c_FASQUEL_image_agreement               -0.048536   0.684610  -0.071   0.9435    
+partner_type1:entrainment_VOTinv         0.342583   0.168512   2.033   0.0421 *  
+partner_type1:block1                    -0.140458   0.129028  -1.089   0.2763    
+entrainment_VOTinv:block1                0.167140   0.140978   1.186   0.2358    
+partner_type1:entrainment_VOTinv:block1 -0.150680   0.126035  -1.196   0.2319    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) prtn_1 en_VOT c_FASQUEL_c block1 c_SUBT c_FASQUEL__ pr_1:_VOT pr_1:1 e_VOT:
+partnr_typ1  0.004                                                                            
+entrnmn_VOT -0.460 -0.031                                                                     
+c_FASQUEL_c  0.008  0.011  0.001                                                              
+block1      -0.149 -0.063  0.115 -0.005                                                       
+c_SUBTLEX__  0.002  0.006 -0.001 -0.081       0.002                                           
+c_FASQUEL__  0.001  0.018  0.000 -0.753      -0.003  0.072                                    
+prtn_1:_VOT -0.017 -0.334 -0.002 -0.034       0.001 -0.037 -0.040                             
+prtnr_ty1:1  0.007  0.056 -0.010  0.006       0.028  0.000 -0.005      -0.023                 
+entrn_VOT:1  0.093 -0.001 -0.106  0.000      -0.253 -0.001  0.000      -0.052    -0.069       
+pr_1:_VOT:1 -0.006 -0.026  0.004 -0.004      -0.069 -0.004  0.007       0.047    -0.257  0.016

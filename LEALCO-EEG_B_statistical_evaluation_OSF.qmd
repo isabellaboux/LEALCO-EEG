@@ -2595,6 +2595,174 @@ ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_x_frequen
 p
 ```
 
+### LMM - covariates
+
+```{r}
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block * entrainment_VOTinv + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness +
+     (partner_type * block * entrainment_VOTinv + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_VOTinv_cov <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOTinv_cov)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv_covariate.txt")
+summary(m_P200_entr_VOTinv_cov)
+sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOTinv_cov@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOTinv_covariate.html")
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P200_entr_VOTinv_cov.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P200_entr_VOTinv_cov@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_cov.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_cov.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P200_entr_VOTinv_cov.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P200_entr_VOTinv_cov.emm_none_partner_x_entrVOTinv <-emmeans(m_P200_entr_VOTinv_cov@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_cov.emm_none_partner_x_entrVOTinv$contrasts)
+m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P200_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv), median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P200_entr_VOTinv_cov.mm_partner_x_entrVOTinv <- emmip(m_P200_entr_VOTinv_cov@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P200_entr_VOTinv_cov.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P200_entr_VOTinv_cov.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P200 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_covariate.pdf", width=4, height=3)
+```
+
+### LMM - essential
+
+```{r}
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block * entrainment_VOTinv + c_FASQUEL_image_agreement +
+     (partner_type * block * entrainment_VOTinv + c_FASQUEL_image_agreement  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_VOTinv_ess <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOTinv_ess)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv_essential.txt")
+summary(m_P200_entr_VOTinv_ess)
+sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOTinv_ess@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOTinv_essential.html")
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P200_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P200_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P200_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P200_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv <-emmeans(m_P200_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv$contrasts)
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv), median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv <- emmip(m_P200_entr_VOTinv_ess@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P200 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_essential.pdf", width=4, height=3)
+```
+
+### LLM - nano
+
+```{r}
+# indicate the maximal effect structutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P200 ~ partner_type * block * entrainment_VOTinv +
+     (partner_type * block * entrainment_VOTinv  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P200_entr_VOTinv_nano <- buildmer(f,data=P200,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P200_entr_VOTinv_nano)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P200entrainment_LMM_VOTinv_nano.txt")
+summary(m_P200_entr_VOTinv_nano)
+sink(file = NULL)
+
+save_model_to_html(m_P200_entr_VOTinv_nano@model, 3, "LEALCO-EEG_P200entrainment_LMM_VOTinv_nano.html")
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P200_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P200_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P200_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_tukey_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P200_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv <-emmeans(m_P200_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P200_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv$contrasts)
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P200_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P200entrainment_ph_none_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P200$entrainment_VOTinv), median(P200$entrainment_VOTinv), max(P200$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv <- emmip(m_P200_entr_VOTinv_ess@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P200entrainment_marginalMeans_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P200_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P200 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P200entrainment_partner_x_entrVOTinv_nano.pdf", width=4, height=3)
+```
+
 ## P300 incl. entrainment_VOTinv
 
 ### LMM - original submission
@@ -2661,6 +2829,258 @@ p1 <- ggplot(m_P300_entr_VOTinv.mm_partner_x_entrVOTinv$data, aes(x=entrainment_
   theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
 ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_entrVOTinv.pdf", width=4, height=3)
 p1
+```
+
+### LMM - covariate
+
+ 
+
+```{r}
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block * entrainment_VOTinv + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness  +
+     (partner_type * block * entrainment_VOTinv + c_SUBTLEX_frequency_log + c_FASQUEL_image_agreement + c_FASQUEL_concreteness  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P300_entr_VOTinv_cov <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_entr_VOTinv_cov)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_entrVOTinv_cov.txt")
+summary(m_P300_entr_VOTinv_cov)
+sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOTinv_cov@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOTinv_cov.html")
+```
+
+#### \>Post-hoc: Patner Type
+
+```{r}
+# make post-hoc with no correction
+m_P300_entr_VOTinv_cov.emm_none_partner <-emmeans(m_P300_entr_VOTinv_cov@model, pairwise ~ partner_type, adjust = "none")
+m_P300_entr_VOTinv_cov.ph_none_partner <- as.data.frame(m_P300_entr_VOTinv_cov.emm_none_partner$contrasts)
+write.csv(m_P300_entr_VOTinv_cov.ph_none_partner,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_covariate.csv", row.names = FALSE)
+
+# extract and save marginal means (partner)
+m_P300_entr_VOTinv_cov.mm_partner <- as.data.frame(m_P300_entr_VOTinv_cov.emm_none_partner$emmeans)
+write.csv(m_P300_entr_VOTinv_cov.mm_partner,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_covariate.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_cov.mm_partner, aes(x=partner_type, y=emmean, color=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=emmean-SE, ymax=emmean+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Partner Type") +
+  ylim(-4, 14) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_covariate.pdf", width=4, height=3)
+p1
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P300_entr_VOTinv_cov.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P300_entr_VOTinv_cov@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_cov.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_cov.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P300_entr_VOTinv_cov.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_tukey_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P300_entr_VOTinv_cov.emm_none_partner_x_entrVOTinv <-emmeans(m_P300_entr_VOTinv_cov@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_cov.emm_none_partner_x_entrVOTinv$contrasts)
+m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P300_entr_VOTinv_cov.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P300$entrainment_VOTinv), median(P300$entrainment_VOTinv), max(P300$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P300_entr_VOTinv_cov.mm_partner_x_entrVOTinv <- emmip(m_P300_entr_VOTinv_cov@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P300_entr_VOTinv_cov.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_x_entrVOTinv_covariate.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_cov.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_entrVOTinv_covariate.pdf", width=4, height=3)
+```
+
+### LMM - essential
+
+```{r}
+
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block * entrainment_VOTinv + c_FASQUEL_image_agreement  +
+     (partner_type * block * entrainment_VOTinv + c_FASQUEL_image_agreement  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P300_entr_VOTinv_ess <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_entr_VOTinv_ess)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_entrVOTinv_ess.txt")
+summary(m_P300_entr_VOTinv_ess)
+sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOTinv_ess@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOTinv_ess.html")
+```
+
+#### \>Post-hoc: Patner Type
+
+```{r}
+# make post-hoc with no correction
+m_P300_entr_VOTinv_ess.emm_none_partner <-emmeans(m_P300_entr_VOTinv_ess@model, pairwise ~ partner_type, adjust = "none")
+m_P300_entr_VOTinv_ess.ph_none_partner <- as.data.frame(m_P300_entr_VOTinv_ess.emm_none_partner$contrasts)
+write.csv(m_P300_entr_VOTinv_ess.ph_none_partner,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_essential.csv", row.names = FALSE)
+
+# extract and save marginal means (partner)
+m_P300_entr_VOTinv_ess.mm_partner <- as.data.frame(m_P300_entr_VOTinv_ess.emm_none_partner$emmeans)
+write.csv(m_P300_entr_VOTinv_ess.mm_partner,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_essential.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_ess.mm_partner, aes(x=partner_type, y=emmean, color=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=emmean-SE, ymax=emmean+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Partner Type") +
+  ylim(-4, 14) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_essential.pdf", width=4, height=3)
+p1
+
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P300_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P300_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_ess.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P300_entr_VOTinv_ess.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_tukey_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P300_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv <-emmeans(m_P300_entr_VOTinv_ess@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_ess.emm_none_partner_x_entrVOTinv$contrasts)
+m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P300_entr_VOTinv_ess.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P300$entrainment_VOTinv), median(P300$entrainment_VOTinv), max(P300$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P300_entr_VOTinv_ess.mm_partner_x_entrVOTinv <- emmip(m_P300_entr_VOTinv_ess@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P300_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_x_entrVOTinv_essential.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_ess.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_entrVOTinv_essential.pdf", width=4, height=3)
+```
+
+### LMM - nano
+
+```{r}
+
+# indicate the maximal effect strucutre (both fixed and random) that is motivated based on design & hypotheses
+f <- P300 ~ partner_type * block * entrainment_VOTinv  +
+     (partner_type * block * entrainment_VOTinv  | subjID) +
+     (partner_type * block * entrainment_VOTinv | target_label)
+
+# select the maximal model that still converges
+m_P300_entr_VOTinv_nano <- buildmer(f,data=P300,buildmerControl=buildmerControl(direction='order', args=list(control=lmerControl(optimizer='bobyqa'))))
+summary(m_P300_entr_VOTinv_nano)
+
+# save winning model
+sink(file = "output_stats/LEALCO-EEG_P300entrainment_LMM_entrVOTinv_nano.txt")
+summary(m_P300_entr_VOTinv_nano)
+sink(file = NULL)
+
+save_model_to_html(m_P300_entr_VOTinv_nano@model, 3, "LEALCO-EEG_P300entrainment_LMM_VOTinv_nano.html")
+```
+
+#### \>Post-hoc: Patner Type
+
+```{r}
+# make post-hoc with no correction
+m_P300_entr_VOTinv_nano.emm_none_partner <-emmeans(m_P300_entr_VOTinv_nano@model, pairwise ~ partner_type, adjust = "none")
+m_P300_entr_VOTinv_nano.ph_none_partner <- as.data.frame(m_P300_entr_VOTinv_nano.emm_none_partner$contrasts)
+write.csv(m_P300_entr_VOTinv_nano.ph_none_partner,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_nano.csv", row.names = FALSE)
+
+# extract and save marginal means (partner)
+m_P300_entr_VOTinv_nano.mm_partner <- as.data.frame(m_P300_entr_VOTinv_nano.emm_none_partner$emmeans)
+write.csv(m_P300_entr_VOTinv_nano.mm_partner,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_nano.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_nano.mm_partner, aes(x=partner_type, y=emmean, color=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=emmean-SE, ymax=emmean+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Partner Type") +
+  ylim(-4, 14) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_nano.pdf", width=4, height=3)
+p1
+
+```
+
+#### \>Post-hoc: Patner Type x entrainment_VOTinv
+
+```{r}
+# make post-hoc with tukey correction
+m_P300_entr_VOTinv_nano.emm_tukey_partner_x_entrVOTinv  <-emmeans(m_P300_entr_VOTinv_nano@model, pairwise ~ partner_type * entrainment_VOTinv, adjust ="Tukey", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_nano.ph_tukey_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_nano.emm_tukey_partner_x_entrVOTinv$contrasts)
+write.csv(m_P300_entr_VOTinv_nano.ph_tukey_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_tukey_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# make post-hoc with no correction
+m_P300_entr_VOTinv_nano.emm_none_partner_x_entrVOTinv <-emmeans(m_P300_entr_VOTinv_nano@model, pairwise ~ partner_type * entrainment_VOTinv, adjust = "none", cov.reduce = function(x) quantile(x, c(0, 0.5, 1)))
+m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv <- as.data.frame(m_P300_entr_VOTinv_nano.emm_none_partner_x_entrVOTinv$contrasts)
+m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv$Bonf2 <- m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv$p.value * 2
+m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv$Bonf3 <- m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv$p.value * 3
+write.csv(m_P300_entr_VOTinv_nano.ph_none_partner_x_entrVOTinv,"output_stats/LEALCO-EEG_P300entrainment_ph_none_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# generate predicted data (but don't plot it yet with emmip)
+(mylist <- list(entrainment_VOTinv=c(min(P300$entrainment_VOTinv), median(P300$entrainment_VOTinv), max(P300$entrainment_VOTinv)),
+                partner_type=c("same","different")))
+m_P300_entr_VOTinv_nano.mm_partner_x_entrVOTinv <- emmip(m_P300_entr_VOTinv_nano@model, partner_type  ~ entrainment_VOTinv, at=mylist,CIs=TRUE, plotit=TRUE)
+write.csv(m_P300_entr_VOTinv_nano.mm_partner_x_entrVOTinv$data,"output_stats/LEALCO-EEG_P300entrainment_marginalMeans_partner_x_entrVOTinv_nano.csv", row.names = FALSE)
+
+# plot 
+p1 <- ggplot(m_P300_entr_VOTinv_nano.mm_partner_x_entrVOTinv$data, aes(x=entrainment_VOTinv, y=yvar, color=partner_type, group=partner_type)) +
+  geom_point(stat = "identity", position=position_dodge(0.9)) +
+  geom_errorbar(aes(ymin=yvar-SE, ymax=yvar+SE), width=.3, position=position_dodge(0.9)) +
+  scale_fill_manual(values = pal1) +
+  scale_color_manual(values = pal1) +
+  labs(y="P300 (\u00b5V)", x="Part.-Spec. Naming Latency") +
+  ylim(-4, 14) +
+  xlim(-3, 3) +
+  geom_hline(yintercept=0, linetype=3) +
+  theme(axis.text=element_text(size=15), axis.title=element_text(size=16)) 
+p1
+ggsave("output_figures/LEALCO-EEG_P300entrainment_partner_x_entrVOTinv_nano.pdf", width=4, height=3)
 ```
 
 # Session Information

@@ -1,0 +1,50 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P200 ~ 1 + partner_type + entrainment_VOTinv + partner_type:entrainment_VOTinv +      c_FASQUEL_image_agreement + block + partner_type:block +      entrainment_VOTinv:block + partner_type:entrainment_VOTinv:block +  
+    (1 + entrainment_VOTinv + block + partner_type | subjID) +      (1 | target_label)
+   Data: P200
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list(         check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",  
+        check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",          check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 27546.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.2682 -0.6381 -0.0111  0.6151  4.1751 
+
+Random effects:
+ Groups       Name               Variance Std.Dev. Corr             
+ target_label (Intercept)         0.94818 0.9737                    
+ subjID       (Intercept)         3.70329 1.9244                    
+              entrainment_VOTinv  1.77286 1.3315   -0.50            
+              block1              0.18663 0.4320   -0.45  0.40      
+              partner_type1       0.04191 0.2047   -0.04 -0.05 -0.78
+ Residual                        60.64813 7.7877                    
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                                         Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                              3.478866   0.393016   8.852   <2e-16 ***
+partner_type1                           -0.206248   0.136285  -1.513   0.1302    
+entrainment_VOTinv                      -0.004512   0.381224  -0.012   0.9906    
+c_FASQUEL_image_agreement               -0.169098   0.442012  -0.383   0.7020    
+block1                                   0.034937   0.144614   0.242   0.8091    
+partner_type1:entrainment_VOTinv         0.341075   0.166499   2.049   0.0405 *  
+partner_type1:block1                    -0.140514   0.129023  -1.089   0.2761    
+entrainment_VOTinv:block1                0.167304   0.140968   1.187   0.2353    
+partner_type1:entrainment_VOTinv:block1 -0.150659   0.126029  -1.195   0.2319    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) prtn_1 en_VOT c_FASQ block1 pr_1:_VOT pr_1:1 e_VOT:
+partnr_typ1  0.003                                                    
+entrnmn_VOT -0.462 -0.031                                             
+c_FASQUEL__  0.011  0.040  0.001                                      
+block1      -0.149 -0.063  0.114 -0.010                               
+prtn_1:_VOT -0.017 -0.331 -0.003 -0.100  0.001                        
+prtnr_ty1:1  0.007  0.056 -0.010  0.000  0.028 -0.022                 
+entrn_VOT:1  0.093 -0.001 -0.106 -0.001 -0.253 -0.053    -0.069       
+pr_1:_VOT:1 -0.006 -0.026  0.004  0.006 -0.069  0.047    -0.257  0.016

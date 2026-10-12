@@ -1,0 +1,54 @@
+Linear mixed model fit by REML
+(p-values based on Wald z-scores) ['lmerMod']
+Formula: P300 ~ 1 + entrainment_VOTinv + c_FASQUEL_image_agreement + partner_type +      entrainment_VOTinv:partner_type + block + partner_type:block +      c_FASQUEL_concreteness + c_SUBTLEX_frequency_log + entrainment_VOTinv:block +  
+    entrainment_VOTinv:partner_type:block + (1 + block + c_FASQUEL_image_agreement +      c_SUBTLEX_frequency_log | subjID) + (1 | target_label)
+   Data: P300
+Control: structure(list(optimizer = "bobyqa", restart_edge = TRUE, boundary.tol = 1e-05,      calc.derivs = TRUE, use.last.params = FALSE, checkControl = list(         check.nobs.vs.rankZ = "ignore", check.nobs.vs.nlev = "stop",  
+        check.nlev.gtreq.5 = "ignore", check.nlev.gtr.1 = "stop",          check.nobs.vs.nRE = "stop", check.rankX = "message+drop.cols",          check.scaleX = "warning", check.formula.LHS = "stop"),  
+    checkConv = list(check.conv.grad = list(action = "warning",          tol = 0.002, relTol = NULL), check.conv.singular = list(         action = "message", tol = 1e-04), check.conv.hess = list( 
+        action = "warning", tol = 1e-06)), optCtrl = list()), class = c("lmerControl",  "merControl"))
+
+REML criterion at convergence: 27737
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.1882 -0.6442 -0.0129  0.6198  3.5808 
+
+Random effects:
+ Groups       Name                      Variance Std.Dev. Corr             
+ target_label (Intercept)                1.0522  1.0258                    
+ subjID       (Intercept)               13.3116  3.6485                    
+              block1                     0.0566  0.2379   -0.80            
+              c_FASQUEL_image_agreement  1.1190  1.0578    0.16 -0.69      
+              c_SUBTLEX_frequency_log    0.1276  0.3572   -0.14  0.15 -0.15
+ Residual                               62.9059  7.9313                    
+Number of obs: 3946, groups:  target_label, 56; subjID, 47
+
+Fixed effects:
+                                        Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                             10.23869    0.58090  17.626  < 2e-16 ***
+entrainment_VOTinv                       0.58850    0.55191   1.066  0.28629    
+c_FASQUEL_image_agreement                0.42451    0.71422   0.594  0.55226    
+partner_type1                           -0.29527    0.13561  -2.177  0.02946 *  
+block1                                  -0.07778    0.13624  -0.571  0.56805    
+c_FASQUEL_concreteness                   0.16983    0.61677   0.275  0.78305    
+c_SUBTLEX_frequency_log                  0.01700    0.25462   0.067  0.94677    
+entrainment_VOTinv:partner_type1         0.47156    0.16855   2.798  0.00514 ** 
+partner_type1:block1                    -0.23110    0.13139  -1.759  0.07859 .  
+entrainment_VOTinv:block1               -0.01327    0.13246  -0.100  0.92021    
+entrainment_VOTinv:partner_type1:block1 -0.10884    0.12833  -0.848  0.39637    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) en_VOT c_FASQUEL__ prtn_1 block1 c_FASQUEL_c c_SUBT en_VOT:_1 pr_1:1 e_VOT:1
+entrnmn_VOT -0.235                                                                             
+c_FASQUEL__  0.032  0.001                                                                      
+partnr_typ1  0.007 -0.016  0.018                                                               
+block1      -0.185  0.042 -0.041       0.021                                                   
+c_FASQUEL_c  0.005  0.001 -0.735       0.011 -0.005                                            
+c_SUBTLEX__ -0.026 -0.001  0.061       0.006  0.010 -0.079                                     
+entr_VOT:_1 -0.014  0.006 -0.039      -0.337 -0.014 -0.035      -0.037                         
+prtnr_ty1:1  0.005 -0.006 -0.005       0.058  0.030  0.006       0.000 -0.024                  
+entrn_VOT:1  0.041 -0.187 -0.001      -0.029 -0.255  0.000      -0.001  0.010    -0.073        
+en_VOT:_1:1 -0.006  0.004  0.007      -0.027 -0.074 -0.004      -0.004  0.047    -0.257  0.017 
